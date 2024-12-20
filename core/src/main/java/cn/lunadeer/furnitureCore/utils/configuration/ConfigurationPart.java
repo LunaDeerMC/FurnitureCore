@@ -1,4 +1,4 @@
-package cn.lunadeer.furnitureCore.configuration;
+package cn.lunadeer.furnitureCore.utils.configuration;
 
 /**
  * Marker interface for unique sections of a configuration.

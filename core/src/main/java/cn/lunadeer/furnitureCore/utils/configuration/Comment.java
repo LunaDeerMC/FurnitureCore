@@ -1,4 +1,4 @@
-package cn.lunadeer.furnitureCore.configuration;
+package cn.lunadeer.furnitureCore.utils.configuration;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

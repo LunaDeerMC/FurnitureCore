@@ -3,7 +3,10 @@ package cn.lunadeer.furnitureCore;
 import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.bStatsMetrics;
+import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationManager;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
 
 public final class FurnitureCore extends JavaPlugin {
 
@@ -12,6 +15,12 @@ public final class FurnitureCore extends JavaPlugin {
         instance = this;
         new Notification(this);
         new XLogger(this);
+        try {
+            ConfigurationManager.load(Configuration.class, new File(FurnitureCore.getInstance().getDataFolder(), "config.yml"));
+        } catch (Exception e) {
+            XLogger.err("Failed to load configuration file: %s", e.getMessage());
+        }
+        XLogger.setDebug(Configuration.debug);
         XLogger.info("FurnitureCore is loading...");
 
 
@@ -26,6 +35,7 @@ public final class FurnitureCore extends JavaPlugin {
         XLogger.info(" |_|   \\__,_|_|  |_| |_|_|\\__|\\__,_|_|  \\___|\\_____\\___/|_|  \\___|");
         XLogger.info(" ");
         XLogger.info("FurnitureCore is loaded!");
+        XLogger.debug("Debug mode is enabled.");
     }
 
     @Override
