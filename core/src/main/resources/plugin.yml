@@ -1,0 +1,5 @@
+name: FurnitureCore
+version: '@version@'
+main: cn.lunadeer.furnitureCore.FurnitureCore
+api-version: '1.20'
+folia-supported: true
