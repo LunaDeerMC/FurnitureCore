@@ -1,5 +1,6 @@
 package cn.lunadeer.furnitureCore.utils.configuration;
 
+import cn.lunadeer.furnitureCore.utils.XLogger;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -30,9 +31,12 @@ public class ConfigurationManager {
             if (prefix != null && !prefix.isEmpty()) {
                 key = prefix + "." + key;
             }
-            if (field.getType().isAssignableFrom(ConfigurationPart.class)) {
+            // if field is extending ConfigurationPart, recursively write the content
+            if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
+                XLogger.info("%s is a ConfigurationPart.", field.getName());
                 writeContent(yaml, field.getType(), key);
             } else {
+                XLogger.info("Writing %s to %s.", field.getName(), key);
                 yaml.set(key, field.get(null));
             }
             if (field.isAnnotationPresent(Comment.class)) {
@@ -57,7 +61,7 @@ public class ConfigurationManager {
             if (!yaml.contains(key)) {
                 continue;
             }
-            if (field.getType().isAssignableFrom(ConfigurationPart.class)) {
+            if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
                 readContent(yaml, field.getType(), key);
             } else {
                 field.set(null, yaml.get(key));
