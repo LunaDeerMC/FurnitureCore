@@ -24,8 +24,8 @@ public final class FurnitureCore extends JavaPlugin {
         XLogger.setDebug(Configuration.debug);
         XLogger.info("FurnitureCore is loading...");
 
-
-        bStatsMetrics metrics = new bStatsMetrics(this, 24192);
+        new bStatsMetrics(this, 24192);
+        new ModelManager(this);
 
         // http://patorjk.com/software/taag/#p=display&f=Big&t=FurnitureCore
         XLogger.info("  ______                _ _                   _____");
@@ -46,6 +46,10 @@ public final class FurnitureCore extends JavaPlugin {
 
     public static FurnitureCore getInstance() {
         return instance;
+    }
+
+    public static File getCacheDir() {
+        return new File(FurnitureCore.getInstance().getDataFolder(), "cache");
     }
 
     private static FurnitureCore instance;

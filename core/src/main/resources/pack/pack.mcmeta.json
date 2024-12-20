@@ -1,0 +1,10 @@
+{
+  "pack": {
+    "pack_format": 14,
+    "description": "Furniture Core",
+    "supported_formats": {
+      "min_inclusive": 14,
+      "max_exclusive": 50
+    }
+  }
+}

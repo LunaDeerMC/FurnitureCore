@@ -4,8 +4,6 @@ import cn.lunadeer.furnitureCore.utils.configuration.Comment;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationFile;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
 
-import java.io.File;
-
 public class Configuration extends ConfigurationFile {
 
     @Comment("The resource pack server for the client to download the resource pack.")

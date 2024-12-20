@@ -22,6 +22,7 @@ repositories {
 dependencies {
     implementation(project(":api"))
     implementation("net.kyori:adventure-platform-bukkit:4.3.3")
+    implementation("com.alibaba:fastjson:2.0.31")
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
 }
 

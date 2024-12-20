@@ -28,6 +28,8 @@ public class bStatsMetrics {
 
     private final MetricsBase metricsBase;
 
+    private static bStatsMetrics instance;
+
     /**
      * Creates a new Metrics instance.
      *
@@ -36,6 +38,7 @@ public class bStatsMetrics {
      *                  href="https://bstats.org/what-is-my-plugin-id">What is my plugin id?</a>
      */
     public bStatsMetrics(JavaPlugin plugin, int serviceId) {
+        instance = this;
         this.plugin = plugin;
         // Get the config file
         File bStatsFolder = new File(plugin.getDataFolder().getParentFile(), "bStats");
