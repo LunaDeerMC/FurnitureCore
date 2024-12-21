@@ -27,6 +27,12 @@ public final class FurnitureCore extends JavaPlugin {
         new bStatsMetrics(this, 24192);
         new ModelManager(this);
 
+        // 1. ModelManage#loadAndIndexModels
+
+        // 2. GenerateResourcePack#generate
+
+        // 3. GenerateResourcePack#startServer
+
         // http://patorjk.com/software/taag/#p=display&f=Big&t=FurnitureCore
         XLogger.info("  ______                _ _                   _____");
         XLogger.info(" |  ____|              (_) |                 / ____|");
