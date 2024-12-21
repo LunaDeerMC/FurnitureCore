@@ -7,24 +7,43 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.List;
 
+/**
+ * Utility class for loading and saving configuration files.
+ * <p>
+ * This class uses reflection to read and write configuration files. Capable of reading and writing nested configuration parts.
+ */
 public class ConfigurationManager {
 
+    /**
+     * Load the configuration file.
+     *
+     * @param clazz The configuration file class. The class should extend {@link ConfigurationFile}.
+     * @param file  The file to load.
+     * @throws Exception If failed to load the file.
+     */
     public static void load(Class<? extends ConfigurationFile> clazz, File file) throws Exception {
         if (!file.exists()) {
             save(clazz, file);
         }
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-        readContent(yaml, clazz, null);
+        readConfigurationFile(yaml, clazz, null);
     }
 
+    /**
+     * Save the configuration file.
+     *
+     * @param clazz The configuration file class. The class should extend {@link ConfigurationFile}.
+     * @param file  The file to save.
+     * @throws Exception If failed to save the file.
+     */
     public static void save(Class<? extends ConfigurationFile> clazz, File file) throws Exception {
         createIfNotExist(file);
         YamlConfiguration yaml = new YamlConfiguration();
-        writeContent(yaml, clazz, null);
+        writeConfigurationFile(yaml, clazz, null);
         yaml.save(file);
     }
 
-    private static void writeContent(YamlConfiguration yaml, Class<?> clazz, String prefix) throws Exception {
+    private static void writeConfigurationFile(YamlConfiguration yaml, Class<? extends ConfigurationFile> clazz, String prefix) throws Exception {
         for (Field field : clazz.getFields()) {
             field.setAccessible(true);
             String key = camelToKebab(field.getName());
@@ -34,7 +53,7 @@ public class ConfigurationManager {
             // if field is extending ConfigurationPart, recursively write the content
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
                 XLogger.info("%s is a ConfigurationPart.", field.getName());
-                writeContent(yaml, field.getType(), key);
+                writeConfigurationPart(yaml, (ConfigurationPart) field.get(null), key);
             } else {
                 XLogger.info("Writing %s to %s.", field.getName(), key);
                 yaml.set(key, field.get(null));
@@ -45,13 +64,29 @@ public class ConfigurationManager {
         }
     }
 
-    private static void createIfNotExist(File file) throws Exception{
+    private static void writeConfigurationPart(YamlConfiguration yaml, ConfigurationPart obj, String key) throws Exception {
+        for (Field field : obj.getClass().getFields()) {
+            field.setAccessible(true);
+            String newKey = key + "." + camelToKebab(field.getName());
+            if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
+                writeConfigurationPart(yaml, (ConfigurationPart) field.get(obj), newKey);
+            } else {
+                yaml.set(newKey, field.get(obj));
+            }
+            if (field.isAnnotationPresent(Comment.class)) {
+                yaml.setComments(newKey, List.of(field.getAnnotation(Comment.class).value()));
+            }
+        }
+    }
+
+    private static void createIfNotExist(File file) throws Exception {
         if (file.exists()) return;
-        if (!file.getParentFile().exists() && !file.getParentFile().mkdirs()) throw new Exception("Failed to create %s directory.".formatted(file.getParentFile().getAbsolutePath()));
+        if (!file.getParentFile().exists() && !file.getParentFile().mkdirs())
+            throw new Exception("Failed to create %s directory.".formatted(file.getParentFile().getAbsolutePath()));
         if (!file.createNewFile()) throw new Exception("Failed to create %s file.".formatted(file.getAbsolutePath()));
     }
 
-    private static void readContent(YamlConfiguration yaml, Class<?> clazz, String prefix) throws Exception {
+    private static void readConfigurationFile(YamlConfiguration yaml, Class<? extends ConfigurationFile> clazz, String prefix) throws Exception {
         for (Field field : clazz.getFields()) {
             field.setAccessible(true);
             String key = camelToKebab(field.getName());
@@ -62,9 +97,24 @@ public class ConfigurationManager {
                 continue;
             }
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
-                readContent(yaml, field.getType(), key);
+                readConfigurationPart(yaml, (ConfigurationPart) field.get(null), key);
             } else {
                 field.set(null, yaml.get(key));
+            }
+        }
+    }
+
+    private static void readConfigurationPart(YamlConfiguration yaml, ConfigurationPart obj, String key) throws Exception {
+        for (Field field : obj.getClass().getFields()) {
+            field.setAccessible(true);
+            String newKey = key + "." + camelToKebab(field.getName());
+            if (!yaml.contains(newKey)) {
+                continue;
+            }
+            if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
+                readConfigurationPart(yaml, (ConfigurationPart) field.get(obj), newKey);
+            } else {
+                field.set(obj, yaml.get(newKey));
             }
         }
     }

@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ModelManager {
-    private final JavaPlugin plugin;
+    private final FurnitureCore plugin;
     private static ModelManager instance;
     private final File modelDir;
     private final File indexFilePath;
@@ -19,7 +19,7 @@ public class ModelManager {
     private int largestIndex = 0;
 
 
-    public ModelManager(JavaPlugin plugin) {
+    public ModelManager(FurnitureCore plugin) {
         this.plugin = plugin;
         instance = this;
         modelDir = new File(plugin.getDataFolder(), "models");
@@ -40,7 +40,7 @@ public class ModelManager {
     /**
      * Load and index models
      */
-    public void loadAndIndexModels() throws Exception{
+    public void loadAndIndexModels() throws Exception {
         // 1. list all zip files under models directory
         List<String> modelDirZipFilenames = new ArrayList<>();
         File[] zipFiles = modelDir.listFiles((dir, name) -> name.endsWith(".zip"));
@@ -115,6 +115,11 @@ public class ModelManager {
             }
         }
 
+        XLogger.info("Loaded & indexed %d models.", models.size());
+        for (Model model : models) {
+            XLogger.info("Model %d: %s", model.getIndex(), model.getModelName());
+        }
+
         try {
             indexFile.save(indexFilePath);
         } catch (Exception e) {
@@ -132,6 +137,21 @@ public class ModelManager {
 
     public List<Model> getModels() {
         return models;
+    }
+
+    /**
+     * Remove a model from index if something wrong externally
+     *
+     * @param index model index to remove
+     */
+    public void removeIndexedModel(int index) {
+        models.removeIf(model -> model.getIndex() == index);
+        indexFile.set(String.valueOf(index), null);
+        try {
+            indexFile.save(indexFilePath);
+        } catch (Exception e) {
+            XLogger.err("Failed to save index file: %s", e.getMessage());
+        }
     }
 
 }

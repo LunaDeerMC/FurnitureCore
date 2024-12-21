@@ -25,13 +25,6 @@ public final class FurnitureCore extends JavaPlugin {
         XLogger.info("FurnitureCore is loading...");
 
         new bStatsMetrics(this, 24192);
-        new ModelManager(this);
-
-        // 1. ModelManage#loadAndIndexModels
-
-        // 2. GenerateResourcePack#generate
-
-        // 3. GenerateResourcePack#startServer
 
         // http://patorjk.com/software/taag/#p=display&f=Big&t=FurnitureCore
         XLogger.info("  ______                _ _                   _____");
@@ -41,6 +34,24 @@ public final class FurnitureCore extends JavaPlugin {
         XLogger.info(" | |  | |_| | |  | | | | | |_| |_| | | |  __/ |___| (_) | | |  __/");
         XLogger.info(" |_|   \\__,_|_|  |_| |_|_|\\__|\\__,_|_|  \\___|\\_____\\___/|_|  \\___|");
         XLogger.info(" ");
+
+        // Prepare managers do model stuff
+        getCacheDir().mkdirs();
+        new ModelManager(this);
+        new ResourcePackManager(this);
+
+        try {
+            // 1. ModelManage#loadAndIndexModels
+            ModelManager.getInstance().loadAndIndexModels();
+            // 2. GenerateResourcePack#generate
+            ResourcePackManager.getInstance().generate();
+            // 3. GenerateResourcePack#startServer
+            ResourcePackManager.getInstance().startServer(Configuration.resourcePackServer.host, Configuration.resourcePackServer.port);
+
+        } catch (Exception e) {
+            XLogger.err("%s", e.getMessage());
+        }
+
         XLogger.info("FurnitureCore is loaded!");
         XLogger.debug("Debug mode is enabled.");
     }
