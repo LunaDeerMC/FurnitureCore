@@ -6,6 +6,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ModelManager {
@@ -13,8 +14,9 @@ public class ModelManager {
     private static ModelManager instance;
     private final File modelDir;
     private final File indexFilePath;
-    private YamlConfiguration indexFile;
-    private List<Model> models = new ArrayList<>();
+    private final YamlConfiguration indexFile;
+    private final List<Model> models = new ArrayList<>();
+    private int largestIndex = 0;
 
 
     public ModelManager(JavaPlugin plugin) {
@@ -35,29 +37,83 @@ public class ModelManager {
 
     }
 
-    public void checkAndIndexModels() {
+    /**
+     * Load and index models
+     */
+    public void loadAndIndexModels() throws Exception{
         // 1. list all zip files under models directory
+        List<String> modelDirZipFilenames = new ArrayList<>();
+        File[] zipFiles = modelDir.listFiles((dir, name) -> name.endsWith(".zip"));
+        if (zipFiles == null) {
+            throw new Exception("Failed to list files under dir %s".formatted(modelDir.getAbsolutePath()));
+        }
+        Arrays.stream(zipFiles).forEach(file -> modelDirZipFilenames.add(file.getName()));
+
+        List<String> skipFilenames = new ArrayList<>();
 
         // 2. for each indexed model
+        for (String key : indexFile.getKeys(false)) {
+            int index;
+            try {
+                index = Integer.parseInt(key);
+            } catch (NumberFormatException e) {
+                XLogger.err("Invalid index: %s", key);
+                indexFile.set(key, null);
+                continue;
+            }
+            // - 1. check if the model zip still exists
+            String zipFileName = indexFile.getString(key);
+            if (zipFileName == null) {
+                indexFile.set(key, null);
+                continue;
+            }
+            if (!modelDirZipFilenames.contains(zipFileName)) {
+                XLogger.err("Model %s not found removing from index.", zipFileName);
+                indexFile.set(key, null);
+                continue;
+            }
+            skipFilenames.add(zipFileName);
 
-        // - 1. check if the model zip still exists
+            // - 2. try load model then set index
+            File zipFile = new File(modelDir, zipFileName);
+            try {
+                Model model = Model.loadModel(zipFile);
+                model.setIndex(index);
+                if (model.getIndex() > largestIndex) {
+                    largestIndex = model.getIndex();
+                }
 
-        // - 2. try load model then set index
+                // - 3. add the model to a list for later use
+                models.add(model);
+            } catch (Exception e) {
+                // - 4. if anything wrong, remove the model from index
+                XLogger.err("Failed to load model: %s", zipFile.getAbsoluteFile().toString());
+                XLogger.err("Reason: %s", e.getMessage());
+                indexFile.set(key, null);
+            }
+        }
 
-        // - 3. add the model to a list for later use
+        // 3. for each zip file
+        for (String zipFilename : modelDirZipFilenames) {
+            // - 1. skip if the model is already processed
+            if (skipFilenames.contains(zipFilename)) {
+                continue;
+            }
+            File zipFile = new File(modelDir, zipFilename);
 
-        // 3. if anything wrong, remove the model from index
-
-        // 4. for each zip file
-
-        // - 1. skip if the model is already indexed
-
-        // - 2. skip the model removed in step 3
-
-        // - 3. try load model then assign & set index
-
-        // - 4. add the model to a list for later use
-
+            // - 2. try load model then assign & set index
+            try {
+                Model model = Model.loadModel(zipFile);
+                largestIndex++;
+                model.setIndex(largestIndex);
+                indexFile.set(String.valueOf(largestIndex), zipFilename);
+                // - 3. add the model to a list for later use
+                models.add(model);
+            } catch (Exception e) {
+                XLogger.err("Failed to load model: %s", zipFile.getAbsoluteFile().toString());
+                XLogger.err("Reason: %s", e.getMessage());
+            }
+        }
 
         try {
             indexFile.save(indexFilePath);
@@ -66,15 +122,16 @@ public class ModelManager {
         }
     }
 
-
-
-
     public static ModelManager getInstance() {
         return instance;
     }
 
     public File getModelDir() {
         return modelDir;
+    }
+
+    public List<Model> getModels() {
+        return models;
     }
 
 }

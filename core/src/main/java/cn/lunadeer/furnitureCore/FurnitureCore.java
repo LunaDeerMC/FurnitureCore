@@ -52,5 +52,9 @@ public final class FurnitureCore extends JavaPlugin {
         return new File(FurnitureCore.getInstance().getDataFolder(), "cache");
     }
 
+    public static String getNamespace() {
+        return "furniture_core";
+    }
+
     private static FurnitureCore instance;
 }
