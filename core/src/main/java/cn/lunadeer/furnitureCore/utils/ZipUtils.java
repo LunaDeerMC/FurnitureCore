@@ -10,6 +10,40 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipUtils {
 
+    public static void compressFolderContentToZip(File folder, File zipFile) throws IOException {
+        compressFolderContentToZip(folder.getAbsolutePath(), zipFile.getAbsolutePath());
+    }
+
+    public static void compressFolderContentToZip(String folderPath, String zipFilePath) throws IOException {
+        File folder = new File(folderPath);
+        try (FileOutputStream fos = new FileOutputStream(zipFilePath);
+             ZipOutputStream zos = new ZipOutputStream(fos)) {
+            compressFolderContent(folder, zos, "");
+        }
+    }
+
+    private static void compressFolderContent(File folder, ZipOutputStream zos, String parentPath) throws IOException {
+        File[] files = folder.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            if (file.isDirectory()) {
+                compressFolderContent(file, zos, parentPath + file.getName() + "/");
+            } else {
+                try (FileInputStream fis = new FileInputStream(file)) {
+                    zos.putNextEntry(new ZipEntry(parentPath + file.getName()));
+                    byte[] buffer = new byte[1024];
+                    int length;
+                    while ((length = fis.read(buffer)) >= 0) {
+                        zos.write(buffer, 0, length);
+                    }
+                    zos.closeEntry();
+                }
+            }
+        }
+    }
+
     public static void compressToZip(File sourceFile, File zipFile) throws IOException {
         compressToZip(sourceFile.getAbsolutePath(), zipFile.getAbsolutePath());
     }

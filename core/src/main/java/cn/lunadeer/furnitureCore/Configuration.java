@@ -25,7 +25,7 @@ public class Configuration extends ConfigurationFile {
         @Comment("The url will be used by the client to download the resource pack. Make sure it's accessible from the client.")
         public String url = "http://127.0.0.1:8089";
 
-        @Comment("Weather the resource pack is required to join the server.")
+        @Comment("Weather the resource pack is force required to join the server.")
         public boolean required = false;
     }
 
