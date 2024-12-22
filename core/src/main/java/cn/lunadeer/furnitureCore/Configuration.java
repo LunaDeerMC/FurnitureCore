@@ -36,7 +36,7 @@ public class Configuration extends ConfigurationFile {
 
         @Comments({
                 "The url will be used by the client to download the resource pack. Make sure it's accessible from the client.",
-                "<public-ip>: the ip (or domain) players use to connect to the server.",
+                "<public-ip>: usually the same ip (or domain) players use to connect to the server.",
                 "<port>: the port you set above.",
                 "If you are using a domain, make sure it's correctly resolved to your public ip."
         })
