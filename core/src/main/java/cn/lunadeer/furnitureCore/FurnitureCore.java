@@ -16,8 +16,7 @@ public final class FurnitureCore extends JavaPlugin {
         new Notification(this);
         new XLogger(this);
         try {
-            ConfigurationManager.load(Configuration.class, new File(FurnitureCore.getInstance().getDataFolder(), "config.yml"));
-            ConfigurationManager.save(Configuration.class, new File(FurnitureCore.getInstance().getDataFolder(), "config.yml"));
+            ConfigurationManager.load(Configuration.class, new File(FurnitureCore.getInstance().getDataFolder(), "config.yml"), "version");
         } catch (Exception e) {
             XLogger.err("Failed to load configuration file: %s", e.getMessage());
         }
@@ -70,7 +69,7 @@ public final class FurnitureCore extends JavaPlugin {
     }
 
     public static String getNamespace() {
-        return "furniture_core";
+        return Configuration.namespace;
     }
 
     private static FurnitureCore instance;

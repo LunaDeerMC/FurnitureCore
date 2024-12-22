@@ -24,9 +24,28 @@ public class ConfigurationManager {
     public static void load(Class<? extends ConfigurationFile> clazz, File file) throws Exception {
         if (!file.exists()) {
             save(clazz, file);
+            return;
         }
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         readConfigurationFile(yaml, clazz, null);
+    }
+
+    /**
+     * Load the configuration file and update the version field if needed.
+     *
+     * @param clazz           The configuration file class. The class should extend {@link ConfigurationFile}.
+     * @param file            The file to load.
+     * @param versionFieldName The name of the version field.
+     * @throws Exception If failed to load the file.
+     */
+    public static void load(Class<? extends ConfigurationFile> clazz, File file, String versionFieldName) throws Exception {
+        Field versionField = clazz.getField(versionFieldName);
+        int currentVersion = versionField.getInt(null);
+        load(clazz, file);
+        if (versionField.getInt(null) != currentVersion) {
+            clazz.getField(versionFieldName).set(null, currentVersion);
+            save(clazz, file);
+        }
     }
 
     /**
