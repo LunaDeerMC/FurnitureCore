@@ -42,10 +42,10 @@ public final class FurnitureCore extends JavaPlugin {
         try {
             // 1. ModelManage#loadAndIndexModels
             ModelManager.getInstance().loadAndIndexModels();
-            // 2. GenerateResourcePack#generate
+            // 2. GenerateResourcePack
             ResourcePackManager.getInstance().generate();
-            // 3. GenerateResourcePack#startServer
-            ResourcePackManager.getInstance().startServer(Configuration.resourcePackServer.host, Configuration.resourcePackServer.port);
+            // 3. StartHttpServerToProvideResourcePack
+            ResourcePackManager.getInstance().startServer();
 
         } catch (Exception e) {
             XLogger.err("%s", e.getMessage());
@@ -69,7 +69,7 @@ public final class FurnitureCore extends JavaPlugin {
     }
 
     public static String getNamespace() {
-        return Configuration.namespace;
+        return Configuration.resourcePackSettings.namespace;
     }
 
     private static FurnitureCore instance;

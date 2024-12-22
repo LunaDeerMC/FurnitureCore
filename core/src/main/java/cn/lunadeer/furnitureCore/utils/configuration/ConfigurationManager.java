@@ -33,8 +33,8 @@ public class ConfigurationManager {
     /**
      * Load the configuration file and update the version field if needed.
      *
-     * @param clazz           The configuration file class. The class should extend {@link ConfigurationFile}.
-     * @param file            The file to load.
+     * @param clazz            The configuration file class. The class should extend {@link ConfigurationFile}.
+     * @param file             The file to load.
      * @param versionFieldName The name of the version field.
      * @throws Exception If failed to load the file.
      */
@@ -78,12 +78,10 @@ public class ConfigurationManager {
                 yaml.set(key, field.get(null));
             }
             if (field.isAnnotationPresent(Comment.class)) {
-                String comment = field.getAnnotation(Comment.class).value();
-                if (comment.contains("\n")) {
-                    yaml.setComments(key, List.of(comment.split("\n")));
-                } else {
-                    yaml.setComments(key, List.of(comment));
-                }
+                yaml.setComments(key, List.of(field.getAnnotation(Comment.class).value()));
+            }
+            if (field.isAnnotationPresent(Comments.class)) {
+                yaml.setComments(key, List.of(field.getAnnotation(Comments.class).value()));
             }
         }
     }
@@ -99,6 +97,9 @@ public class ConfigurationManager {
             }
             if (field.isAnnotationPresent(Comment.class)) {
                 yaml.setComments(newKey, List.of(field.getAnnotation(Comment.class).value()));
+            }
+            if (field.isAnnotationPresent(Comments.class)) {
+                yaml.setComments(newKey, List.of(field.getAnnotation(Comments.class).value()));
             }
         }
     }

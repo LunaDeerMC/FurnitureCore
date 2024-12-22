@@ -140,11 +140,10 @@ public class ResourcePackManager {
 
     /**
      * Start a small http server to serve the resource pack.
-     *
-     * @param host the host to bind
-     * @param port the port to bind
      */
-    public void startServer(String host, int port) {
+    public void startServer() {
+        String host = Configuration.resourcePackServer.host;
+        int port = Configuration.resourcePackServer.port;
         // todo: run a small http server to serve the resource pack
         XLogger.info("Starting resource pack server at %s:%d", host, port);
         status = Status.READY;
@@ -171,10 +170,10 @@ public class ResourcePackManager {
         if (status != Status.READY) {
             throw new IllegalStateException("Resource pack is not ready.");
         }
-        player.setResourcePack(Configuration.resourcePackServer.url,
+        player.setResourcePack(Configuration.resourcePackSettings.url,
                 resourcePackHash,
                 "This is a resource pack update from Server FurnitureCore.",
-                Configuration.resourcePackServer.required);
+                Configuration.resourcePackSettings.required);
     }
 
     private static File getResourcePackCacheDir() {
@@ -186,7 +185,7 @@ public class ResourcePackManager {
     }
 
     private static File getResourcePackZip() {
-        return new File(FurnitureCore.getCacheDir(), "furniture-core-resource-pack.zip");
+        return new File(FurnitureCore.getCacheDir(), Configuration.resourcePackSettings.packName + ".zip");
     }
 
     public static ResourcePackManager getInstance() {

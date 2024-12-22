@@ -4,9 +4,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Annotation for adding single line comments to configuration fields.
+ * Annotation for adding multiple lines of comments to configuration fields.
  */
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Comment {
-    String value();
+public @interface Comments {
+    String[] value();
 }
