@@ -78,7 +78,12 @@ public class ConfigurationManager {
                 yaml.set(key, field.get(null));
             }
             if (field.isAnnotationPresent(Comment.class)) {
-                yaml.setComments(key, List.of(field.getAnnotation(Comment.class).value()));
+                String comment = field.getAnnotation(Comment.class).value();
+                if (comment.contains("\n")) {
+                    yaml.setComments(key, List.of(comment.split("\n")));
+                } else {
+                    yaml.setComments(key, List.of(comment));
+                }
             }
         }
     }
