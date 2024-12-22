@@ -79,14 +79,29 @@ public class Model {
         return index;
     }
 
+    /**
+     * Set the custom name of the model, generally used for display.
+     * <p>
+     * If not set in the json file, the custom name will be the name of the model file.
+     *
+     * @param customName the custom name of the model
+     */
     public void setCustomName(String customName) {
         this.customName = customName;
     }
 
+    /**
+     * Get the custom name of the model, generally used for display.
+     * <p>
+     * If not set in the json file, the custom name will be the name of the model file.
+     */
     public String getCustomName() {
         return customName;
     }
 
+    /**
+     * Get the name of the model, which is the name of the json file
+     */
     public String getModelName() {
         return modelName;
     }
@@ -95,6 +110,14 @@ public class Model {
     private String modelPath = null;
     private String namespace = "minecraft";
 
+    /**
+     * Set the path of the texture
+     * <p>
+     * e.g. "beds" will make the model saved to "assets/namespace/textures/beds".
+     * Texture's callable name will be "namespace:beds/textureName".
+     *
+     * @param texturePath the path of the texture
+     */
     public void setTexturePath(String texturePath) {
         if (savedAndEffective) {
             throw new IllegalStateException("Model already effective, cannot change texture path.");
@@ -108,6 +131,14 @@ public class Model {
         this.texturePath = texturePath;
     }
 
+    /**
+     * Set the path of the model
+     * <p>
+     * e.g. "beds" will make the model saved to "assets/namespace/models/beds".
+     * Model's callable name will be "namespace:beds/modelName".
+     *
+     * @param modelPath the path of the model
+     */
     public void setModelPath(String modelPath) {
         if (savedAndEffective) {
             throw new IllegalStateException("Model already effective, cannot change model path.");
@@ -121,6 +152,11 @@ public class Model {
         this.modelPath = modelPath;
     }
 
+    /**
+     * Set the namespace of the model
+     *
+     * @param namespace the namespace of the model
+     */
     public void setNamespace(String namespace) {
         if (savedAndEffective) {
             throw new IllegalStateException("Model already effective, cannot change namespace.");
@@ -131,13 +167,24 @@ public class Model {
         this.namespace = namespace;
     }
 
-    public String getModelCallableName() {
+    /**
+     * Get the name of the model in the format of namespace:path/name
+     *
+     * @return the name of the model
+     */
+    public String getCallableName() {
         if (!savedAndEffective) {
             throw new IllegalStateException("Model not effective yet.");
         }
         return namespace + ":" + (modelPath == null ? modelName : modelPath + "/" + modelName);
     }
 
+    /**
+     * Save the model to the asset path
+     *
+     * @param assetPath the asset path of the resource pack
+     * @throws Exception if failed to save the model
+     */
     public void save(File assetPath) throws Exception {
         File textureSavePath = new File(assetPath, namespace + "/textures");
         if (texturePath != null) {

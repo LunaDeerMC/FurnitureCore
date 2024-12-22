@@ -103,7 +103,7 @@ public class ResourcePackManager {
             JSONObject predicate = new JSONObject();
             predicate.put("custom_model_data", model.getIndex());
             override.put("predicate", predicate);
-            override.put("model", model.getModelCallableName());
+            override.put("model", model.getCallableName());
             overrides.add(override);
         }
         for (Integer index : failedModels) {
