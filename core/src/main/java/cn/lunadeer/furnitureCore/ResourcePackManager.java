@@ -5,11 +5,13 @@ import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.sun.net.httpserver.HttpServer;
 import org.bukkit.entity.Player;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ public class ResourcePackManager {
     private final FurnitureCore plugin;
     private byte[] resourcePackHash;
     private Status status = Status.GENERATING;
+    private HttpServer server = null;
 
     public ResourcePackManager(FurnitureCore plugin) {
         instance = this;
@@ -141,12 +144,34 @@ public class ResourcePackManager {
     /**
      * Start a small http server to serve the resource pack.
      */
-    public void startServer() {
-        String host = Configuration.resourcePackServer.host;
-        int port = Configuration.resourcePackServer.port;
-        // todo: run a small http server to serve the resource pack
-        XLogger.info("Starting resource pack server at %s:%d", host, port);
+    public void startServer() throws Exception{
+        InetSocketAddress address = new InetSocketAddress("0.0.0.0", Configuration.resourcePackServer.port);
+        // run a small http server to serve the resource pack
+        if (server != null) {
+            server.stop(0);
+        }
+        server = HttpServer.create(address, 0);
+        server.createContext("/" + getResourcePackZip().getName(), exchange -> {
+            exchange.sendResponseHeaders(200, getResourcePackZip().length());
+            try (FileInputStream fis = new FileInputStream(getResourcePackZip())) {
+                byte[] buffer = new byte[1024];
+                int bytesRead;
+                while ((bytesRead = fis.read(buffer)) != -1) {
+                    exchange.getResponseBody().write(buffer, 0, bytesRead);
+                }
+            }
+            exchange.close();
+        });
+        server.start();
+        XLogger.info("Resource pack is hosted at %s", getResourcePackUrl());
         status = Status.READY;
+    }
+
+    public void stopServer(){
+        if (server != null) {
+            server.stop(0);
+            server = null;
+        }
     }
 
     /**
@@ -170,7 +195,7 @@ public class ResourcePackManager {
         if (status != Status.READY) {
             throw new IllegalStateException("Resource pack is not ready.");
         }
-        player.setResourcePack(Configuration.resourcePackSettings.url,
+        player.setResourcePack(getResourcePackUrl(),
                 resourcePackHash,
                 "This is a resource pack update from Server FurnitureCore.",
                 Configuration.resourcePackSettings.required);
@@ -186,6 +211,10 @@ public class ResourcePackManager {
 
     private static File getResourcePackZip() {
         return new File(FurnitureCore.getCacheDir(), Configuration.resourcePackSettings.packName + ".zip");
+    }
+
+    private static String getResourcePackUrl() {
+        return "http://%s:%d/%s".formatted(Configuration.resourcePackServer.host, Configuration.resourcePackServer.port, getResourcePackZip().getName());
     }
 
     public static ResourcePackManager getInstance() {
