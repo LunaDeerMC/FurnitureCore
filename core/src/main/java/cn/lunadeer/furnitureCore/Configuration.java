@@ -8,7 +8,7 @@ import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
 public class Configuration extends ConfigurationFile {
 
     @Comment("Do not modify this value.")
-    public static int version = 1;
+    public static int version = 2;
 
     @Comment("The resource pack server for the client to download the resource pack.")
     public static ResourcePackServer resourcePackServer = new ResourcePackServer();
