@@ -5,7 +5,6 @@ import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -28,7 +27,7 @@ public class ResourcePackManager {
             "assets/minecraft/models/item/item_frame.json"
     );
 
-    public void generate() throws Exception{
+    public void generate() throws Exception {
         // 1. copy pre-defined files to pack directory
         for (String filename : preDefinedResourcePackFiles) {
             plugin.saveResource("pack/" + filename, true);
@@ -37,7 +36,7 @@ public class ResourcePackManager {
         // 2. move pack directory to cache/resource_pack
         File resourcePackDir = new File(plugin.getDataFolder(), "pack");
         if (getResourcePackCacheDir().exists()) {
-            if (!getResourcePackCacheDir().delete()) {
+            if (!DeleteFolderRecursively(getResourcePackCacheDir())) {
                 throw new Exception("Failed to delete cache directory: %s".formatted(getResourcePackCacheDir().getAbsolutePath()));
             }
         }
@@ -100,11 +99,11 @@ public class ResourcePackManager {
         if (!getResourcePackZip().exists()) {
             throw new Exception("Failed to generate resource pack zip file.");
         }
-        if(!getResourcePackCacheDir().delete()) {
+        if (!DeleteFolderRecursively(getResourcePackCacheDir())) {
             throw new Exception("Failed to delete cache/resource_pack directory.");
         }
 
-        XLogger.info("Resource pack generated successfully. Size: %d MB", getResourcePackZip().length() / 1024 / 1024);
+        XLogger.info("Resource pack generated successfully. Size: %s", GetResourcePackZipSize());
     }
 
     public void startServer(String host, int port) {
@@ -128,5 +127,31 @@ public class ResourcePackManager {
         return instance;
     }
 
+    private static boolean DeleteFolderRecursively(File folder) {
+        File[] files = folder.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isDirectory()) {
+                    DeleteFolderRecursively(f);
+                } else {
+                    if (!f.delete()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return folder.delete();
+    }
+
+    private static String GetResourcePackZipSize() {
+        float sizeByte = (float) getResourcePackZip().length();
+        if (sizeByte < 1024) {
+            return sizeByte + " B";
+        } else if (sizeByte < 1024 * 1024) {
+            return sizeByte / 1024 + " KB";
+        } else {
+            return sizeByte / 1024 / 1024 + " MB";
+        }
+    }
 
 }
