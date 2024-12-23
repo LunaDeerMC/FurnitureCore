@@ -44,6 +44,8 @@ public class ModelManager {
      * Load and index models
      */
     public void loadAndIndexModels() throws Exception {
+        // 0. clear recipes
+        ModelManager.getInstance().getModels().forEach(FurnitureModel::unregisterRecipe);
         // 1. list all zip files under models directory
         List<String> modelDirZipFilenames = new ArrayList<>();
         File[] zipFiles = modelDir.listFiles((dir, name) -> name.endsWith(".zip"));

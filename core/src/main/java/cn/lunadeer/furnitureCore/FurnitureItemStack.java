@@ -81,9 +81,6 @@ public class FurnitureItemStack extends ItemStack {
      */
     public FurnitureItemStack(@NotNull FurnitureModel furnitureModel, Integer size) {
         super(Material.ITEM_FRAME, size);
-        if (!ResourcePackManager.getInstance().isReady()) {
-            throw new IllegalStateException("Resource pack not ready.");
-        }
         setItemMeta(furnitureModel);
     }
 

@@ -2,16 +2,19 @@ package cn.lunadeer.furnitureCore;
 
 import cn.lunadeer.furnitureCore.utils.ImageUtils;
 import cn.lunadeer.furnitureCore.utils.JsonUtils;
+import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.CraftingRecipe;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class FurnitureModel {
 
@@ -52,10 +55,29 @@ public class FurnitureModel {
                 }
                 furnitureModel.textures.put(key, texture);
             }
-            // todo 5. load recipes
+            // 5. load recipes
+            JSONArray recipes = json.getJSONArray("recipes");
+            if (recipes != null) {
+                for (int i = 0; i < recipes.size(); i++) {
+                    try {
+                        NamespacedKey pdcKey = new NamespacedKey(FurnitureCore.getInstance(), "furniture_" + furnitureModel.getModelName() + "_recipe_" + i);
+                        JSONObject recipe = recipes.getJSONObject(i);
+                        String type = Objects.requireNonNullElse(recipe.getString("type"), "shapeless");
+                        if (type.equals("shapeless")) {
+                            furnitureModel.recipes.put(pdcKey, getShapelessRecipe(i, recipe, pdcKey, furnitureModel));
+                        } else if (type.equals("shaped")) {
+                            furnitureModel.recipes.put(pdcKey, getShapedRecipe(i, recipe, pdcKey, furnitureModel));
+                        } else {
+                            throw new Exception("Unknown recipe type: %s".formatted(type));
+                        }
+                    } catch (Exception e) {
+                        XLogger.err("Model %s recipe %d failed to load: %s".formatted(furnitureModel.getCallableName(), i, e.getMessage()));
+                    }
+                }
+            }
             return furnitureModel;
         } finally {
-            // 5. clean the cache directory in finally block
+            // 6. clean the cache directory in finally block
             if (unzipCache.exists()) {
                 boolean re = unzipCache.delete();
             }
@@ -67,8 +89,8 @@ public class FurnitureModel {
     private String modelName;
     private JSONObject elements;
     private final Map<String, BufferedImage> textures = new HashMap<>();
+    private final Map<NamespacedKey, CraftingRecipe> recipes = new HashMap<>();
     private boolean savedAndEffective = false;
-    private List<CraftingRecipe> recipes = new ArrayList<>();
 
     public void setIndex(Integer index) {
         if (savedAndEffective) {
@@ -227,10 +249,80 @@ public class FurnitureModel {
         // save model json
         JsonUtils.saveToFile(json, new File(modelSavePath, modelName + ".json"));
         // add recipes
-        for (CraftingRecipe recipe : recipes) {
+        for (CraftingRecipe recipe : recipes.values()) {
             FurnitureCore.getInstance().getServer().addRecipe(recipe);
         }
         savedAndEffective = true;
+    }
+
+    /**
+     * Unregister the recipe of the model
+     */
+    public void unregisterRecipe() {
+        for (CraftingRecipe recipe : recipes.values()) {
+            FurnitureCore.getInstance().getServer().removeRecipe(recipe.getKey());
+        }
+    }
+
+    private static ShapedRecipe getShapedRecipe(int i, JSONObject recipe, NamespacedKey pdcKey, FurnitureModel furnitureModel) throws Exception {
+        ShapedRecipe shapedRecipe = new ShapedRecipe(pdcKey, new FurnitureItemStack(furnitureModel));
+        JSONArray shape = recipe.getJSONArray("shape");
+        if (shape == null) {
+            throw new Exception("Shape not found in shaped recipe %d".formatted(i));
+        }
+        if (shape.size() != 3) {
+            throw new Exception("Shape should have 3 rows in shaped recipe %d".formatted(i));
+        }
+        for (int j = 0; j < shape.size(); j++) {
+            String row = shape.getString(j);
+            if (row == null) {
+                throw new Exception("Row %d not available in shaped recipe %d".formatted(j, i));
+            }
+            if (row.length() != 3) {
+                throw new Exception("Row %d should have 3 characters in shaped recipe %d".formatted(j, i));
+            }
+        }
+        String r1 = shape.getString(0);
+        String r2 = shape.getString(1);
+        String r3 = shape.getString(2);
+        shapedRecipe.shape(r1, r2, r3);
+        JSONObject ingredients = recipe.getJSONObject("ingredients");
+        if (ingredients == null) {
+            throw new Exception("Ingredients not found in shaped recipe %d".formatted(i));
+        }
+        for (String key : ingredients.keySet()) {
+            if (key.length() != 1) {
+                throw new Exception("Key %s should have 1 character in shaped recipe %d".formatted(key, i));
+            }
+            String ingredient = ingredients.getString(key);
+            if (ingredient == null) {
+                throw new Exception("Ingredient %s not available in shaped recipe %d".formatted(key, i));
+            }
+            if (ingredient.startsWith("minecraft:")) {
+                ingredient = ingredient.split(":")[1];
+            }
+            shapedRecipe.setIngredient(key.charAt(0), Material.valueOf(ingredient.toUpperCase()));
+        }
+        return shapedRecipe;
+    }
+
+    private static ShapelessRecipe getShapelessRecipe(int i, JSONObject recipe, NamespacedKey pdcKey, FurnitureModel furnitureModel) throws Exception {
+        ShapelessRecipe shapelessRecipe = new ShapelessRecipe(pdcKey, new FurnitureItemStack(furnitureModel));
+        JSONArray ingredients = recipe.getJSONArray("ingredients");
+        if (ingredients == null) {
+            throw new Exception("Ingredients not found in recipe %d".formatted(i));
+        }
+        for (int j = 0; j < ingredients.size(); j++) {
+            String ingredient = ingredients.getString(j);
+            if (ingredient == null) {
+                throw new Exception("Ingredient %d not available in recipe %d".formatted(j, i));
+            }
+            if (ingredient.startsWith("minecraft:")) {
+                ingredient = ingredient.split(":")[1];
+            }
+            shapelessRecipe.addIngredient(Material.valueOf(ingredient.toUpperCase()));
+        }
+        return shapelessRecipe;
     }
 
 }
