@@ -8,7 +8,7 @@ import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
 public class Configuration extends ConfigurationFile {
 
     @Comment("Do not modify this value.")
-    public static int version = 3;
+    public static int version = 4;
 
     @Comment("The resource pack server for the client to download the resource pack.")
     public static ResourcePackServer resourcePackServer = new ResourcePackServer();
@@ -31,10 +31,7 @@ public class Configuration extends ConfigurationFile {
         @Comment("The namespace of the resources.")
         public String namespace = "furniture_core";
 
-        @Comments({
-                "The name of the resource pack.",
-                "If change this, don't forget to change the name in url below."
-        })
+        @Comment("The name of the resource pack.")
         public String packName = "furniture-core-resource-pack";
 
         @Comment("Weather the resource pack is force required to join the server.")
