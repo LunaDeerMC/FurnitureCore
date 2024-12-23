@@ -173,6 +173,13 @@ public class ModelManager {
                 .orElse(null);
     }
 
+    public @Nullable FurnitureModel get(int index) {
+        return furnitureModels.stream()
+                .filter(model -> model.getIndex() == index)
+                .findFirst()
+                .orElse(null);
+    }
+
     /**
      * Remove a model from index if something wrong externally
      *
