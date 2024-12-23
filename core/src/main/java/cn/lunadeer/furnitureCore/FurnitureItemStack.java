@@ -18,7 +18,10 @@ public class FurnitureItemStack extends ItemStack {
      * @param item The item stack.
      */
     public FurnitureItemStack(@NotNull ItemStack item) throws IllegalArgumentException {
-        super(item);
+        super(Material.ITEM_FRAME, item.getAmount());
+        if (item.getType() != Material.ITEM_FRAME) {
+            throw new IllegalArgumentException("Not an item frame.");
+        }
         ItemMeta meta = item.getItemMeta();
         if (meta == null) {
             throw new IllegalArgumentException("Item meta not found.");
@@ -53,6 +56,7 @@ public class FurnitureItemStack extends ItemStack {
      * @param size         The size of the item stack.
      */
     public FurnitureItemStack(String callableName, Integer size) {
+        super(Material.ITEM_FRAME, size);
         FurnitureModel model = ModelManager.getInstance().getModelByCallableName(callableName);
         if (model == null) {
             throw new IllegalArgumentException("Model not found.");
