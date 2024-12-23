@@ -18,7 +18,7 @@ public class Configuration extends ConfigurationFile {
                 "Your public ip or domain players use to connect to the server.",
                 "If you are using a domain the record should be an A record pointing to your server's ip."
         })
-        public String host = "mc.xyz.com";
+        public String host = "replace.to.your.domain.or.ip";
 
         @Comment("The port of the resource pack server.")
         public int port = 8089;
