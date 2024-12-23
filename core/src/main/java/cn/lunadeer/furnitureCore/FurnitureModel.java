@@ -33,7 +33,13 @@ public class FurnitureModel {
             }
             furnitureModel.modelName = jsonFiles[0].getName().replace(".json", "");
             JSONObject json = JsonUtils.loadFromFile(jsonFiles[0]);
+            furnitureModel.ambientocclusion = json.containsKey("ambientocclusion") ? json.getBoolean("ambientocclusion") : true;
+            furnitureModel.display = json.containsKey("display") ? json.getJSONObject("display") : null;
+            furnitureModel.gui_light = json.containsKey("gui_light") ? json.getString("gui_light") : "side";
             furnitureModel.elements = json.getJSONObject("elements");
+            if (furnitureModel.elements == null) {
+                throw new Exception("Elements not found in json model file.");
+            }
 
             // 3. check if custom_name exists in json file then set it to model
             if (json.containsKey("custom_name")) {
@@ -87,7 +93,10 @@ public class FurnitureModel {
     private Integer index;
     private String customName;
     private String modelName;
+    private boolean ambientocclusion = true;
     private JSONObject elements;
+    private JSONObject display;
+    private String gui_light = "side";
     private final Map<String, BufferedImage> textures = new HashMap<>();
     private final Map<NamespacedKey, CraftingRecipe> recipes = new HashMap<>();
     private boolean savedAndEffective = false;
@@ -244,8 +253,13 @@ public class FurnitureModel {
             }
             textures.put(key, name);
         }
+        json.put("ambientocclusion", ambientocclusion);
         json.put("textures", textures);
         json.put("elements", elements);
+        if (display != null) {
+            json.put("display", display);
+        }
+        json.put("gui_light", gui_light);
         // save model json
         JsonUtils.saveToFile(json, new File(modelSavePath, modelName + ".json"));
         // add recipes
