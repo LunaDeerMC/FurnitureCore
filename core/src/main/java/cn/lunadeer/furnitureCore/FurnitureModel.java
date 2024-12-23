@@ -4,10 +4,13 @@ import cn.lunadeer.furnitureCore.utils.ImageUtils;
 import cn.lunadeer.furnitureCore.utils.JsonUtils;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import com.alibaba.fastjson.JSONObject;
+import org.bukkit.inventory.CraftingRecipe;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class FurnitureModel {
@@ -49,6 +52,7 @@ public class FurnitureModel {
                 }
                 furnitureModel.textures.put(key, texture);
             }
+            // todo 5. load recipes
             return furnitureModel;
         } finally {
             // 5. clean the cache directory in finally block
@@ -64,6 +68,7 @@ public class FurnitureModel {
     private JSONObject elements;
     private final Map<String, BufferedImage> textures = new HashMap<>();
     private boolean savedAndEffective = false;
+    private List<CraftingRecipe> recipes = new ArrayList<>();
 
     public void setIndex(Integer index) {
         if (savedAndEffective) {
@@ -186,6 +191,7 @@ public class FurnitureModel {
      * @throws Exception if failed to save the model
      */
     public void save(File assetPath) throws Exception {
+        // prepare save path
         File textureSavePath = new File(assetPath, namespace + "/textures");
         if (texturePath != null) {
             textureSavePath = new File(textureSavePath, texturePath);
@@ -200,9 +206,11 @@ public class FurnitureModel {
         if (!modelSavePath.exists()) {
             boolean re = modelSavePath.mkdirs();
         }
+        // generate model json
         JSONObject json = new JSONObject();
         JSONObject textures = new JSONObject();
         for (String key : this.textures.keySet()) {
+            // generate texture file
             String name = this.modelName + "_" + key;
             if (texturePath != null) {
                 name = texturePath + "/" + name;
@@ -216,7 +224,12 @@ public class FurnitureModel {
         }
         json.put("textures", textures);
         json.put("elements", elements);
+        // save model json
         JsonUtils.saveToFile(json, new File(modelSavePath, modelName + ".json"));
+        // add recipes
+        for (CraftingRecipe recipe : recipes) {
+            FurnitureCore.getInstance().getServer().addRecipe(recipe);
+        }
         savedAndEffective = true;
     }
 
