@@ -10,12 +10,12 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Model {
+public class FurnitureModel {
 
-    public static Model loadModel(File modelFile) throws Exception {
+    public static FurnitureModel loadModel(File modelFile) throws Exception {
         File unzipCache = new File(FurnitureCore.getCacheDir(), "model_" + modelFile.getName().substring(0, modelFile.getName().lastIndexOf(".")));
         try {
-            Model model = new Model();
+            FurnitureModel furnitureModel = new FurnitureModel();
 
             // 1. unzip the file to cache directory
             ZipUtils.decompressFromZip(modelFile, unzipCache);
@@ -25,15 +25,15 @@ public class Model {
             if (jsonFiles == null || jsonFiles.length == 0) {
                 throw new Exception("Model json file not found.");
             }
-            model.modelName = jsonFiles[0].getName().replace(".json", "");
+            furnitureModel.modelName = jsonFiles[0].getName().replace(".json", "");
             JSONObject json = JsonUtils.loadFromFile(jsonFiles[0]);
-            model.elements = json.getJSONObject("elements");
+            furnitureModel.elements = json.getJSONObject("elements");
 
             // 3. check if custom_name exists in json file then set it to model
             if (json.containsKey("custom_name")) {
-                model.customName = json.getString("custom_name");
+                furnitureModel.customName = json.getString("custom_name");
             } else {
-                model.customName = modelFile.getName().substring(0, modelFile.getName().lastIndexOf("."));
+                furnitureModel.customName = modelFile.getName().substring(0, modelFile.getName().lastIndexOf("."));
             }
 
             // 4. valid the texture referenced in json file exists then load it to textures
@@ -47,9 +47,9 @@ public class Model {
                 if (texture == null) {
                     throw new Exception("Failed to load texture: %s".formatted(textureFile.toString()));
                 }
-                model.textures.put(key, texture);
+                furnitureModel.textures.put(key, texture);
             }
-            return model;
+            return furnitureModel;
         } finally {
             // 5. clean the cache directory in finally block
             if (unzipCache.exists()) {
@@ -219,6 +219,5 @@ public class Model {
         JsonUtils.saveToFile(json, new File(modelSavePath, modelName + ".json"));
         savedAndEffective = true;
     }
-
 
 }

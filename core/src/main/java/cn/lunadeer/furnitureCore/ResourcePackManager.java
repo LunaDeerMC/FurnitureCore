@@ -84,13 +84,13 @@ public class ResourcePackManager {
         }
         JSONObject itemFrameJsonObj = JsonUtils.loadFromFile(itemFrameJsonFile);
         JSONArray overrides = new JSONArray();
-        for (Model model : ModelManager.getInstance().getModels()) {
+        for (FurnitureModel furnitureModel : ModelManager.getInstance().getModels()) {
             try {
-                model.setNamespace(FurnitureCore.getNamespace());
-                model.save(getAssetDir());
+                furnitureModel.setNamespace(FurnitureCore.getNamespace());
+                furnitureModel.save(getAssetDir());
             } catch (Exception e) {
-                XLogger.err("Failed to generate model file %s: %s", model.getModelName(), e.getMessage());
-                failedModels.add(model.getIndex());
+                XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
+                failedModels.add(furnitureModel.getIndex());
                 continue;
             }
             // 5. modify item_frame.json
@@ -104,9 +104,9 @@ public class ResourcePackManager {
             //  ]
             JSONObject override = new JSONObject();
             JSONObject predicate = new JSONObject();
-            predicate.put("custom_model_data", model.getIndex());
+            predicate.put("custom_model_data", furnitureModel.getIndex());
             override.put("predicate", predicate);
-            override.put("model", model.getCallableName());
+            override.put("model", furnitureModel.getCallableName());
             overrides.add(override);
         }
         for (Integer index : failedModels) {
@@ -199,6 +199,14 @@ public class ResourcePackManager {
                 resourcePackHash,
                 "This is a resource pack update from Server FurnitureCore.",
                 Configuration.resourcePackSettings.required);
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public boolean isReady() {
+        return status == Status.READY;
     }
 
     private static File getResourcePackCacheDir() {

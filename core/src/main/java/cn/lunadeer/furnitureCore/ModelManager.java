@@ -3,18 +3,22 @@ package cn.lunadeer.furnitureCore;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Manager for models, load and index models
+ */
 public class ModelManager {
     private final FurnitureCore plugin;
     private static ModelManager instance;
     private final File modelDir;
     private final File indexFilePath;
     private final YamlConfiguration indexFile;
-    private final List<Model> models = new ArrayList<>();
+    private final List<FurnitureModel> furnitureModels = new ArrayList<>();
     private int largestIndex = 0;
 
 
@@ -76,14 +80,14 @@ public class ModelManager {
             // - 2. try load model then set index
             File zipFile = new File(modelDir, zipFileName);
             try {
-                Model model = Model.loadModel(zipFile);
-                model.setIndex(index);
-                if (model.getIndex() > largestIndex) {
-                    largestIndex = model.getIndex();
+                FurnitureModel furnitureModel = FurnitureModel.loadModel(zipFile);
+                furnitureModel.setIndex(index);
+                if (furnitureModel.getIndex() > largestIndex) {
+                    largestIndex = furnitureModel.getIndex();
                 }
 
                 // - 3. add the model to a list for later use
-                models.add(model);
+                furnitureModels.add(furnitureModel);
             } catch (Exception e) {
                 // - 4. if anything wrong, remove the model from index
                 XLogger.err("Failed to load model: %s", zipFile.getAbsoluteFile().toString());
@@ -102,21 +106,21 @@ public class ModelManager {
 
             // - 2. try load model then assign & set index
             try {
-                Model model = Model.loadModel(zipFile);
+                FurnitureModel furnitureModel = FurnitureModel.loadModel(zipFile);
                 largestIndex++;
-                model.setIndex(largestIndex);
+                furnitureModel.setIndex(largestIndex);
                 indexFile.set(String.valueOf(largestIndex), zipFilename);
                 // - 3. add the model to a list for later use
-                models.add(model);
+                furnitureModels.add(furnitureModel);
             } catch (Exception e) {
                 XLogger.err("Failed to load model: %s", zipFile.getAbsoluteFile().toString());
                 XLogger.err("Reason: %s", e.getMessage());
             }
         }
 
-        XLogger.info("Loaded & indexed %d models.", models.size());
-        for (Model model : models) {
-            XLogger.info("Model %d: %s", model.getIndex(), model.getModelName());
+        XLogger.info("Loaded & indexed %d models.", furnitureModels.size());
+        for (FurnitureModel furnitureModel : furnitureModels) {
+            XLogger.info("Model %d: %s", furnitureModel.getIndex(), furnitureModel.getModelName());
         }
 
         try {
@@ -134,8 +138,39 @@ public class ModelManager {
         return modelDir;
     }
 
-    public List<Model> getModels() {
-        return models;
+    /**
+     * Get all models
+     *
+     * @return list of models
+     */
+    public List<FurnitureModel> getModels() {
+        return furnitureModels;
+    }
+
+    /**
+     * Get model callable names
+     * <p>
+     * namespace:path/name etc.
+     *
+     * @return list of callable names
+     */
+    public List<String> getModelCallableNames() {
+        return furnitureModels.stream()
+                .map(FurnitureModel::getCallableName)
+                .toList();
+    }
+
+    /**
+     * Get model by its callable name
+     *
+     * @param callableName model callable name
+     * @return model if found, null if not found
+     */
+    public @Nullable FurnitureModel getModelByCallableName(String callableName) {
+        return furnitureModels.stream()
+                .filter(model -> model.getCallableName().equals(callableName))
+                .findFirst()
+                .orElse(null);
     }
 
     /**
@@ -144,7 +179,7 @@ public class ModelManager {
      * @param index model index to remove
      */
     public void removeIndexedModel(int index) {
-        models.removeIf(model -> model.getIndex() == index);
+        furnitureModels.removeIf(furnitureModel -> furnitureModel.getIndex() == index);
         indexFile.set(String.valueOf(index), null);
         try {
             indexFile.save(indexFilePath);
