@@ -1,4 +1,4 @@
-package cn.lunadeer.furnitureCore.item;
+package cn.lunadeer.furnitureCore.items;
 
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;

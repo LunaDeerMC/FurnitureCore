@@ -1,5 +1,7 @@
 package cn.lunadeer.furnitureCore;
 
+import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
+import cn.lunadeer.furnitureCoreApi.managers.ResourcePackManager;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import com.sun.net.httpserver.HttpServer;
@@ -19,25 +21,18 @@ import java.util.List;
 /**
  * Load models, Generate resource pack, Serve resource pack, Apply resource pack to players
  */
-public class ResourcePackManager {
-    public enum ResourcePackStatus {
-        GENERATING,
-        GENERATED,
-        READY,
-        ERROR
-    }
+public class ResourcePackManagerImpl extends ResourcePackManager {
 
-    private static ResourcePackManager instance;
     private final FurnitureCore plugin;
     private final File modelDir;
 
-    private final List<FurnitureModel> modelLoad = new ArrayList<>();
+    private final List<FurnitureModelImpl> modelLoad = new ArrayList<>();
 
     private byte[] resourcePackHash;
     private ResourcePackStatus resourcePackStatus = ResourcePackStatus.GENERATING;
     private HttpServer server = null;
 
-    public ResourcePackManager(FurnitureCore plugin) {
+    public ResourcePackManagerImpl(FurnitureCore plugin) {
         instance = this;
         this.plugin = plugin;
         this.modelDir = new File(plugin.getDataFolder(), "models");
@@ -61,11 +56,7 @@ public class ResourcePackManager {
             "assets/furniture_core/textures/tools/screwdriver_head.png"
     );
 
-    /**
-     * Load models from disk.
-     *
-     * @throws Exception if failed to load models
-     */
+    @Override
     public void loadModelsFromDisk() throws Exception {
         // 1. list all zip files under models directory
         List<String> modelDirZipFilenames = new ArrayList<>();
@@ -82,7 +73,7 @@ public class ResourcePackManager {
 
             // - 2. try load model then assign & set index
             try {
-                FurnitureModel furnitureModel = FurnitureModel.loadModel(zipFile);
+                FurnitureModelImpl furnitureModel = FurnitureModelImpl.loadModel(zipFile);
                 // - 3. add the model to a list for later use
                 modelLoad.add(furnitureModel);
             } catch (Exception e) {
@@ -97,11 +88,7 @@ public class ResourcePackManager {
         }
     }
 
-    /**
-     * Generate the resource pack.
-     *
-     * @throws Exception if failed to generate the resource pack
-     */
+    @Override
     public void generateResourcePack() throws Exception {
         resourcePackStatus = ResourcePackStatus.GENERATING;
         // 0. clear all models
@@ -132,7 +119,7 @@ public class ResourcePackManager {
         }
 
         // 4. save all models (get from ModelManager)
-        for (FurnitureModel furnitureModel : modelLoad) {
+        for (FurnitureModelImpl furnitureModel : modelLoad) {
             try {
                 furnitureModel.setNamespace(FurnitureCore.getNamespace());
                 furnitureModel.save(getAssetDir());
@@ -168,10 +155,8 @@ public class ResourcePackManager {
         }
     }
 
-    /**
-     * Start a small http server to serve the resource pack.
-     */
-    public void startServer() throws Exception{
+    @Override
+    public void startServer() throws Exception {
         InetSocketAddress address = new InetSocketAddress("0.0.0.0", Configuration.resourcePackServer.port);
         // run a small http server to serve the resource pack
         if (server != null) {
@@ -194,30 +179,22 @@ public class ResourcePackManager {
         resourcePackStatus = ResourcePackStatus.READY;
     }
 
-    public void stopServer(){
+    @Override
+    public void stopServer() {
         if (server != null) {
             server.stop(0);
             server = null;
         }
     }
 
-    /**
-     * Apply the resource pack to all players.
-     *
-     * @throws IllegalStateException if the resource pack is not ready
-     */
+    @Override
     public void applyToAllPlayers() throws IllegalStateException {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
             applyToPlayer(player);
         }
     }
 
-    /**
-     * Apply the resource pack to the player.
-     *
-     * @param player the player to apply the resource pack to
-     * @throws IllegalStateException if the resource pack is not ready
-     */
+    @Override
     public void applyToPlayer(Player player) throws IllegalStateException {
         if (resourcePackStatus != ResourcePackStatus.READY) {
             throw new IllegalStateException("Resource pack is not ready.");
@@ -229,10 +206,12 @@ public class ResourcePackManager {
                 Configuration.resourcePackSettings.required);
     }
 
+    @Override
     public ResourcePackStatus getStatus() {
         return resourcePackStatus;
     }
 
+    @Override
     public boolean isReady() {
         return resourcePackStatus == ResourcePackStatus.READY;
     }
@@ -253,10 +232,12 @@ public class ResourcePackManager {
         return "http://%s:%d/%s".formatted(Configuration.resourcePackServer.host, Configuration.resourcePackServer.port, getResourcePackZip().getName());
     }
 
-    public static ResourcePackManager getInstance() {
-        return instance;
-    }
-
+    /**
+     * Delete a folder recursively.
+     *
+     * @param folder the folder to delete
+     * @return true if success, false if failed
+     */
     private static boolean DeleteFolderRecursively(File folder) {
         File[] files = folder.listFiles();
         if (files != null) {
@@ -273,6 +254,11 @@ public class ResourcePackManager {
         return folder.delete();
     }
 
+    /**
+     * Get the size of the resource pack zip file.
+     *
+     * @return the size of the resource pack zip file with unit
+     */
     private static String GetResourcePackZipSize() {
         float sizeByte = (float) getResourcePackZip().length();
         if (sizeByte < 1024) {
@@ -310,6 +296,12 @@ public class ResourcePackManager {
         return digest.digest();
     }
 
+    /**
+     * Convert byte array to hex string.
+     *
+     * @param bytes the byte array
+     * @return the hex string
+     */
     private static String BytesToHex(byte[] bytes) {
         StringBuilder hexString = new StringBuilder();
         for (byte b : bytes) {

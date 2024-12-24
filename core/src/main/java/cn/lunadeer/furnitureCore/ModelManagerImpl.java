@@ -1,5 +1,7 @@
 package cn.lunadeer.furnitureCore;
 
+import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
+import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import org.bukkit.NamespacedKey;
 
 import java.util.HashMap;
@@ -8,45 +10,23 @@ import java.util.Map;
 /**
  * Manager for models
  */
-public class ModelManager {
+public class ModelManagerImpl extends ModelManager {
     private final FurnitureCore plugin;
-    private static ModelManager instance;
 
     private final Map<NamespacedKey, FurnitureModel> modelReady = new HashMap<>();
 
 
-    public ModelManager(FurnitureCore plugin) {
-        this.plugin = plugin;
+    public ModelManagerImpl(FurnitureCore plugin) {
         instance = this;
+        this.plugin = plugin;
     }
 
-    public static ModelManager getInstance() {
-        return instance;
-    }
-
-    /**
-     * Register a model and
-     */
-    public void registerModel(FurnitureModel model) {
-        modelReady.put(model.getItemModelKey(), model);
-        model.registerRecipe();
-    }
-
-    /**
-     * Get model by its key
-     *
-     * @param key model key
-     * @return model if found, null if not found
-     */
+    @Override
     public FurnitureModel getModel(NamespacedKey key) {
         return modelReady.get(key);
     }
 
-    /**
-     * Get model by callable name
-     * @param modelName model name
-     * @return model if found, null if not found
-     */
+    @Override
     public FurnitureModel getModel(String modelName) {
         String name = modelName;
         if (name.contains(":")) {
@@ -59,19 +39,19 @@ public class ModelManager {
         return modelReady.get(new NamespacedKey(FurnitureCore.getNamespace(), name));
     }
 
-    /**
-     * Unregister a model
-     *
-     * @param key model key
-     */
+    @Override
+    public void registerModel(FurnitureModel model) {
+        modelReady.put(model.getItemModelKey(), model);
+        model.registerRecipe();
+    }
+
+    @Override
     public void unregisterModel(NamespacedKey key) {
         modelReady.get(key).unregisterRecipe();
         modelReady.remove(key);
     }
 
-    /**
-     * Unregister all models
-     */
+    @Override
     public void unregisterAllModels() {
         modelReady.forEach((key, model) -> model.unregisterRecipe());
         modelReady.clear();

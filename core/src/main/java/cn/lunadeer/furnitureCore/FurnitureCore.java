@@ -1,11 +1,12 @@
 package cn.lunadeer.furnitureCore;
 
 import cn.lunadeer.furnitureCore.events.PlayerJoin;
-import cn.lunadeer.furnitureCore.item.ScrewdriverItemStack;
+import cn.lunadeer.furnitureCore.items.ScrewdriverItemStack;
 import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.bStatsMetrics;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationManager;
+import cn.lunadeer.furnitureCoreApi.managers.ResourcePackManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -42,8 +43,8 @@ public final class FurnitureCore extends JavaPlugin {
 
         // Prepare managers do model stuff
         getCacheDir().mkdirs();
-        new ModelManager(this);
-        new ResourcePackManager(this);
+        new ModelManagerImpl(this);
+        new ResourcePackManagerImpl(this);
 
         try {
             // 1. ModelManage#loadAndIndexModels
