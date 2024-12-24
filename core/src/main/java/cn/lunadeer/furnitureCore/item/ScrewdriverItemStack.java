@@ -1,6 +1,5 @@
 package cn.lunadeer.furnitureCore.item;
 
-import cn.lunadeer.furnitureCore.FurnitureCore;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -12,7 +11,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.List;
 
 public class ScrewdriverItemStack extends ItemStack {
-    private static final NamespacedKey pdcKey = new NamespacedKey(FurnitureCore.getInstance(), "screwdriver");
+    private static final NamespacedKey pdcKey = new NamespacedKey("furniture_core", "screwdriver");
 
     public ScrewdriverItemStack() {
         super(Material.STICK);
@@ -35,9 +34,6 @@ public class ScrewdriverItemStack extends ItemStack {
         if (!item.getItemMeta().getPersistentDataContainer().has(pdcKey)) {
             throw new IllegalArgumentException("Not a Screwdriver item.");
         }
-        if (item.getItemMeta().getPersistentDataContainer().get(pdcKey, PersistentDataType.INTEGER) == null) {
-            throw new IllegalArgumentException("Screwdriver index not found.");
-        }
         setItemMeta();
     }
 
@@ -45,7 +41,7 @@ public class ScrewdriverItemStack extends ItemStack {
         ItemMeta meta = getItemMeta();
         meta.displayName(Component.text("Screwdriver"));
         meta.getPersistentDataContainer().set(pdcKey, PersistentDataType.INTEGER, 1);
-        meta.setCustomModelData(1);
+        meta.setItemModel(pdcKey);
         meta.lore(List.of(Component.text("Left click to break furniture.")));
         setItemMeta(meta);
     }

@@ -41,14 +41,13 @@ public class ResourcePackManager {
     private final List<String> preDefinedResourcePackFiles = List.of(
             "pack.mcmeta.json",
             "pack.png",
-            "assets/minecraft/models/item/item_frame.json",
-            "assets/minecraft/models/item/stick.json",
 
             "assets/minecraft/atlases/blocks.json",
 
-            "assets/furniture_core/models/item/screwdriver.json",
-            "assets/furniture_core/textures/item/screwdriver_handle.png",
-            "assets/furniture_core/textures/item/screwdriver_head.png"
+            "assets/furniture_core/items/screwdriver.json",
+            "assets/furniture_core/models/tools/screwdriver.json",
+            "assets/furniture_core/textures/tools/screwdriver_handle.png",
+            "assets/furniture_core/textures/tools/screwdriver_head.png"
     );
 
     /**
@@ -84,44 +83,44 @@ public class ResourcePackManager {
         }
 
         // 4. save all models (get from ModelManager)
-        List<Integer> failedModels = new ArrayList<>();
-        File itemFrameJsonFile = new File(getAssetDir(), "minecraft/models/item/item_frame.json");
-        if (!itemFrameJsonFile.exists()) {
-            status = Status.ERROR;
-            throw new Exception("item_frame.json not found.");
-        }
-        JSONObject itemFrameJsonObj = JsonUtils.loadFromFile(itemFrameJsonFile);
-        JSONArray overrides = new JSONArray();
-        for (FurnitureModel furnitureModel : ModelManager.getInstance().getModels()) {
-            try {
-                furnitureModel.setNamespace(FurnitureCore.getNamespace());
-                furnitureModel.save(getAssetDir());
-            } catch (Exception e) {
-                XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
-                failedModels.add(furnitureModel.getIndex());
-                continue;
-            }
-            // 5. modify item_frame.json
-            //  "overrides": [
-            //    {
-            //      "predicate": {
-            //        "custom_model_data": 1
-            //      },
-            //      "model": "tutorial/red_emerald_block"
-            //    }
-            //  ]
-            JSONObject override = new JSONObject();
-            JSONObject predicate = new JSONObject();
-            predicate.put("custom_model_data", furnitureModel.getIndex());
-            override.put("predicate", predicate);
-            override.put("model", furnitureModel.getCallableName());
-            overrides.add(override);
-        }
-        for (Integer index : failedModels) {
-            ModelManager.getInstance().removeIndexedModel(index);
-        }
-        itemFrameJsonObj.put("overrides", overrides);
-        JsonUtils.saveToFile(itemFrameJsonObj, itemFrameJsonFile);
+//        List<Integer> failedModels = new ArrayList<>();
+//        File itemFrameJsonFile = new File(getAssetDir(), "minecraft/models/item/item_frame.json");
+//        if (!itemFrameJsonFile.exists()) {
+//            status = Status.ERROR;
+//            throw new Exception("item_frame.json not found.");
+//        }
+//        JSONObject itemFrameJsonObj = JsonUtils.loadFromFile(itemFrameJsonFile);
+//        JSONArray overrides = new JSONArray();
+//        for (FurnitureModel furnitureModel : ModelManager.getInstance().getModels()) {
+//            try {
+//                furnitureModel.setNamespace(FurnitureCore.getNamespace());
+//                furnitureModel.save(getAssetDir());
+//            } catch (Exception e) {
+//                XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
+//                failedModels.add(furnitureModel.getIndex());
+//                continue;
+//            }
+//            // 5. modify item_frame.json
+//            //  "overrides": [
+//            //    {
+//            //      "predicate": {
+//            //        "custom_model_data": 1
+//            //      },
+//            //      "model": "tutorial/red_emerald_block"
+//            //    }
+//            //  ]
+//            JSONObject override = new JSONObject();
+//            JSONObject predicate = new JSONObject();
+//            predicate.put("custom_model_data", furnitureModel.getIndex());
+//            override.put("predicate", predicate);
+//            override.put("model", furnitureModel.getCallableName());
+//            overrides.add(override);
+//        }
+//        for (Integer index : failedModels) {
+//            ModelManager.getInstance().removeIndexedModel(index);
+//        }
+//        itemFrameJsonObj.put("overrides", overrides);
+//        JsonUtils.saveToFile(itemFrameJsonObj, itemFrameJsonFile);
 
         // 6. zip the cache/resource_pack directory to cache/furniture-core-resource-pack.zip
         if (getResourcePackZip().exists()) {
