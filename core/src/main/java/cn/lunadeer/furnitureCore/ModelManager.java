@@ -2,7 +2,8 @@ package cn.lunadeer.furnitureCore;
 
 import org.bukkit.NamespacedKey;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Manager for models

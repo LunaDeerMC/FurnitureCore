@@ -316,22 +316,27 @@ public class FurnitureModel {
         if (shape == null) {
             throw new Exception("Shape not found in shaped recipe %d".formatted(i));
         }
-        if (shape.size() != 3) {
-            throw new Exception("Shape should have 3 rows in shaped recipe %d".formatted(i));
+        if (shape.size() > 3) {
+            throw new Exception("Shape should not have more than 3 rows in shaped recipe %d".formatted(i));
         }
+        String[] shapeList = new String[shape.size()];
+        List<Character> keys = new ArrayList<>();
         for (int j = 0; j < shape.size(); j++) {
             String row = shape.getString(j);
             if (row == null) {
                 throw new Exception("Row %d not available in shaped recipe %d".formatted(j, i));
             }
-            if (row.length() != 3) {
-                throw new Exception("Row %d should have 3 characters in shaped recipe %d".formatted(j, i));
+            if (row.length() > 3) {
+                throw new Exception("Row %d should not have more than 3 characters in shaped recipe %d".formatted(j, i));
+            }
+            shapeList[j] = row;
+            for (char c : row.toCharArray()) {
+                if (!keys.contains(c)) {
+                    keys.add(c);
+                }
             }
         }
-        String r1 = shape.getString(0);
-        String r2 = shape.getString(1);
-        String r3 = shape.getString(2);
-        shapedRecipe.shape(r1, r2, r3);
+        shapedRecipe.shape(shapeList);
         JSONObject ingredients = recipe.getJSONObject("ingredients");
         if (ingredients == null) {
             throw new Exception("Ingredients not found in shaped recipe %d".formatted(i));
@@ -339,6 +344,9 @@ public class FurnitureModel {
         for (String key : ingredients.keySet()) {
             if (key.length() != 1) {
                 throw new Exception("Key %s should have 1 character in shaped recipe %d".formatted(key, i));
+            }
+            if (!keys.contains(key.charAt(0))) {
+                throw new Exception("Key %s not found in shape in shaped recipe %d".formatted(key, i));
             }
             String ingredient = ingredients.getString(key);
             if (ingredient == null) {
