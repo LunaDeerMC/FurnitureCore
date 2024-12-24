@@ -19,7 +19,7 @@ import java.util.*;
 public class FurnitureModel {
 
     public static FurnitureModel loadModel(File modelFile) throws Exception {
-        File unzipCache = new File(FurnitureCore.getCacheDir(), "model_" + modelFile.getName().substring(0, modelFile.getName().lastIndexOf(".")));
+        File unzipCache = new File(FurnitureCore.getCacheDir(), "model_" + modelFile.getName().replace(".zip", ""));
         try {
             FurnitureModel furnitureModel = new FurnitureModel();
 
@@ -30,6 +30,9 @@ public class FurnitureModel {
             // 2. valid the json file exists then parse it to modelJson
             if (jsonFiles == null || jsonFiles.length == 0) {
                 throw new Exception("Model json file not found.");
+            }
+            if (jsonFiles.length > 1) {
+                XLogger.warn("Multiple json files found in model zip file %s, only the first one will be used.".formatted(modelFile.getAbsolutePath()));
             }
             furnitureModel.modelName = jsonFiles[0].getName().replace(".json", "");
             JSONObject json = JsonUtils.loadFromFile(jsonFiles[0]);
@@ -45,7 +48,7 @@ public class FurnitureModel {
             if (json.containsKey("custom_name")) {
                 furnitureModel.customName = json.getString("custom_name");
             } else {
-                furnitureModel.customName = modelFile.getName().substring(0, modelFile.getName().lastIndexOf("."));
+                furnitureModel.customName = furnitureModel.modelName;
             }
 
             // 4. valid the texture referenced in json file exists then load it to textures
