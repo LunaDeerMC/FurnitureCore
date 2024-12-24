@@ -1,5 +1,7 @@
 package cn.lunadeer.furnitureCore;
 
+import cn.lunadeer.furnitureCore.events.PlayerJoin;
+import cn.lunadeer.furnitureCore.item.ScrewdriverItemStack;
 import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.bStatsMetrics;
@@ -35,6 +37,10 @@ public final class FurnitureCore extends JavaPlugin {
         XLogger.info(" | |  | |_| | |  | | | | | |_| |_| | | |  __/ |___| (_) | | |  __/");
         XLogger.info(" |_|   \\__,_|_|  |_| |_|_|\\__|\\__,_|_|  \\___|\\_____\\___/|_|  \\___|");
         XLogger.info(" ");
+
+        // Prepare recipe & event listeners
+        getServer().addRecipe(ScrewdriverItemStack.getRecipe());
+        getServer().getPluginManager().registerEvents(new PlayerJoin(), this);
 
         // Prepare managers do model stuff
         getCacheDir().mkdirs();

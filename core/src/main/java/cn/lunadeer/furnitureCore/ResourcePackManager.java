@@ -6,6 +6,7 @@ import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.sun.net.httpserver.HttpServer;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -40,7 +41,14 @@ public class ResourcePackManager {
     private final List<String> preDefinedResourcePackFiles = List.of(
             "pack.mcmeta.json",
             "pack.png",
-            "assets/minecraft/models/item/item_frame.json"
+            "assets/minecraft/models/item/item_frame.json",
+            "assets/minecraft/models/item/stick.json",
+
+            "assets/minecraft/atlases/blocks.json",
+
+            "assets/furniture_core/models/item/screwdriver.json",
+            "assets/furniture_core/textures/item/screwdriver_handle.png",
+            "assets/furniture_core/textures/item/screwdriver_head.png"
     );
 
     /**
@@ -195,9 +203,10 @@ public class ResourcePackManager {
         if (status != Status.READY) {
             throw new IllegalStateException("Resource pack is not ready.");
         }
+        XLogger.debug("Applying resource pack to %s", player.getName());
         player.setResourcePack(getResourcePackUrl(),
                 resourcePackHash,
-                "This is a resource pack update from Server FurnitureCore.",
+                Component.text("This is a resource pack update from Server FurnitureCore."),
                 Configuration.resourcePackSettings.required);
     }
 
@@ -256,6 +265,14 @@ public class ResourcePackManager {
         }
     }
 
+    /**
+     * Get the sha1 hash of the file.
+     *
+     * @param file the file to get the hash
+     * @return the hash of the file
+     * @throws IOException              if failed to read the file
+     * @throws NoSuchAlgorithmException if failed to get the hash algorithm
+     */
     public static byte[] GetFileHash(File file) throws IOException, NoSuchAlgorithmException {
         if (!file.exists()) {
             throw new IOException("File not found: %s".formatted(file.getAbsolutePath()));
@@ -263,7 +280,7 @@ public class ResourcePackManager {
         if (!file.isFile()) {
             throw new IOException("Not a file: %s".formatted(file.getAbsolutePath()));
         }
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        MessageDigest digest = MessageDigest.getInstance("SHA-1");
         try (FileInputStream fis = new FileInputStream(file)) {
             byte[] byteArray = new byte[1024];
             int bytesCount;

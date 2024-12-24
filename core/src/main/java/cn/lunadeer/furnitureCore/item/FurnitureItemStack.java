@@ -1,5 +1,8 @@
-package cn.lunadeer.furnitureCore;
+package cn.lunadeer.furnitureCore.item;
 
+import cn.lunadeer.furnitureCore.FurnitureCore;
+import cn.lunadeer.furnitureCore.FurnitureModel;
+import cn.lunadeer.furnitureCore.ModelManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
