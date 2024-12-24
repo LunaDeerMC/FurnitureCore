@@ -4,7 +4,9 @@ import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import org.bukkit.NamespacedKey;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,6 +39,11 @@ public class ModelManagerImpl extends ModelManager {
             name = p[1];
         }
         return modelReady.get(new NamespacedKey(FurnitureCore.getNamespace(), name));
+    }
+    
+    @Override
+    public List<FurnitureModel> getModels() {
+        return new ArrayList<>(modelReady.values());
     }
 
     @Override

@@ -1,7 +1,7 @@
 package cn.lunadeer.furnitureCore.items;
 
-import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
+import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
