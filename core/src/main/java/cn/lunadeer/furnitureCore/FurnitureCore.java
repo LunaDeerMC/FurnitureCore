@@ -6,7 +6,6 @@ import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.bStatsMetrics;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationManager;
-import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -16,7 +15,6 @@ public final class FurnitureCore extends JavaPlugin {
     @Override
     public void onEnable() {
         instance = this;
-        key = new NamespacedKey(instance, "furniture");
         new Notification(this);
         new XLogger(this);
         try {
@@ -49,9 +47,9 @@ public final class FurnitureCore extends JavaPlugin {
 
         try {
             // 1. ModelManage#loadAndIndexModels
-            ModelManager.getInstance().loadAndIndexModels();
+            ResourcePackManager.getInstance().loadModelsFromDisk();
             // 2. GenerateResourcePack
-            ResourcePackManager.getInstance().generate();
+            ResourcePackManager.getInstance().generateResourcePack();
             // 3. StartHttpServerToProvideResourcePack
             ResourcePackManager.getInstance().startServer();
 
@@ -80,10 +78,5 @@ public final class FurnitureCore extends JavaPlugin {
         return Configuration.resourcePackSettings.namespace;
     }
 
-    public static NamespacedKey getPDCKey() {
-        return key;
-    }
-
     private static FurnitureCore instance;
-    private static NamespacedKey key;
 }

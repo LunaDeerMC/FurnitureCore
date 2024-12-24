@@ -11,7 +11,7 @@ import org.bukkit.persistence.PersistentDataType;
 import java.util.List;
 
 public class ScrewdriverItemStack extends ItemStack {
-    private static final NamespacedKey pdcKey = new NamespacedKey("furniture_core", "screwdriver");
+    private static final NamespacedKey pdcKey = new NamespacedKey("furniture_core", "tools/screwdriver");
 
     public ScrewdriverItemStack() {
         super(Material.STICK);

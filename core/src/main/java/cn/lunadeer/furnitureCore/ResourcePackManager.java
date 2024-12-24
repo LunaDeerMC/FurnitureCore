@@ -1,10 +1,7 @@
 package cn.lunadeer.furnitureCore;
 
-import cn.lunadeer.furnitureCore.utils.JsonUtils;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
-import com.alibaba.fastjson.JSONArray;
-import com.alibaba.fastjson.JSONObject;
 import com.sun.net.httpserver.HttpServer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -15,11 +12,13 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
+/**
+ * Load models, Generate resource pack, Serve resource pack, Apply resource pack to players
+ */
 public class ResourcePackManager {
-    public enum Status {
+    public enum ResourcePackStatus {
         GENERATING,
         GENERATED,
         READY,
@@ -28,13 +27,23 @@ public class ResourcePackManager {
 
     private static ResourcePackManager instance;
     private final FurnitureCore plugin;
+    private final File modelDir;
+
+    private final List<FurnitureModel> modelLoad = new ArrayList<>();
+
     private byte[] resourcePackHash;
-    private Status status = Status.GENERATING;
+    private ResourcePackStatus resourcePackStatus = ResourcePackStatus.GENERATING;
     private HttpServer server = null;
 
     public ResourcePackManager(FurnitureCore plugin) {
         instance = this;
         this.plugin = plugin;
+        this.modelDir = new File(plugin.getDataFolder(), "models");
+        if (!this.modelDir.exists()) {
+            if (!this.modelDir.mkdirs()) {
+                XLogger.err("Failed to create models directory.");
+            }
+        }
     }
 
     // add more files if  needed
@@ -44,19 +53,57 @@ public class ResourcePackManager {
 
             "assets/minecraft/atlases/blocks.json",
 
-            "assets/furniture_core/items/screwdriver.json",
+            "assets/furniture_core/items/tools/screwdriver.json",
             "assets/furniture_core/models/tools/screwdriver.json",
             "assets/furniture_core/textures/tools/screwdriver_handle.png",
             "assets/furniture_core/textures/tools/screwdriver_head.png"
     );
 
     /**
+     * Load models from disk.
+     *
+     * @throws Exception if failed to load models
+     */
+    public void loadModelsFromDisk() throws Exception {
+        // 1. list all zip files under models directory
+        List<String> modelDirZipFilenames = new ArrayList<>();
+        File[] zipFiles = modelDir.listFiles((dir, name) -> name.endsWith(".zip"));
+        if (zipFiles == null) {
+            throw new Exception("Failed to list files under dir %s".formatted(modelDir.getAbsolutePath()));
+        }
+        Arrays.stream(zipFiles).forEach(file -> modelDirZipFilenames.add(file.getName()));
+
+        List<String> failed = new ArrayList<>();
+        // 3. for each zip file
+        for (String zipFilename : modelDirZipFilenames) {
+            File zipFile = new File(modelDir, zipFilename);
+
+            // - 2. try load model then assign & set index
+            try {
+                FurnitureModel furnitureModel = FurnitureModel.loadModel(zipFile);
+                // - 3. add the model to a list for later use
+                modelLoad.add(furnitureModel);
+            } catch (Exception e) {
+                XLogger.err("Failed to load model: %s", zipFile.getAbsoluteFile().toString());
+                XLogger.err("Reason: %s", e.getMessage());
+                failed.add(zipFilename);
+            }
+        }
+        XLogger.info("Loaded %d models.", modelLoad.size());
+        if (!failed.isEmpty()) {
+            XLogger.err("Failed to load %d models: %s", failed.size(), String.join(", ", failed));
+        }
+    }
+
+    /**
      * Generate the resource pack.
      *
      * @throws Exception if failed to generate the resource pack
      */
-    public void generate() throws Exception {
-        status = Status.GENERATING;
+    public void generateResourcePack() throws Exception {
+        resourcePackStatus = ResourcePackStatus.GENERATING;
+        // 0. clear all models
+        ModelManager.getInstance().unregisterAllModels();
         // 1. copy pre-defined files to pack directory
         for (String filename : preDefinedResourcePackFiles) {
             plugin.saveResource("pack/" + filename, true);
@@ -66,72 +113,43 @@ public class ResourcePackManager {
         File resourcePackDir = new File(plugin.getDataFolder(), "pack");
         if (getResourcePackCacheDir().exists()) {
             if (!DeleteFolderRecursively(getResourcePackCacheDir())) {
-                status = Status.ERROR;
+                resourcePackStatus = ResourcePackStatus.ERROR;
                 throw new Exception("Failed to delete cache directory: %s".formatted(getResourcePackCacheDir().getAbsolutePath()));
             }
         }
         if (!resourcePackDir.renameTo(getResourcePackCacheDir())) {
-            status = Status.ERROR;
+            resourcePackStatus = ResourcePackStatus.ERROR;
             throw new Exception("Failed to move pack directory to cache directory.");
         }
 
         // 3. rename cache/resource_pack/pack.mcmeta.json to cache/resource_pack/pack.mcmeta
         File packMcmeta = new File(getResourcePackCacheDir(), "pack.mcmeta.json");
         if (!packMcmeta.renameTo(new File(getResourcePackCacheDir(), "pack.mcmeta"))) {
-            status = Status.ERROR;
+            resourcePackStatus = ResourcePackStatus.ERROR;
             throw new Exception("Failed to rename pack.mcmeta.json to pack.mcmeta");
         }
 
         // 4. save all models (get from ModelManager)
-//        List<Integer> failedModels = new ArrayList<>();
-//        File itemFrameJsonFile = new File(getAssetDir(), "minecraft/models/item/item_frame.json");
-//        if (!itemFrameJsonFile.exists()) {
-//            status = Status.ERROR;
-//            throw new Exception("item_frame.json not found.");
-//        }
-//        JSONObject itemFrameJsonObj = JsonUtils.loadFromFile(itemFrameJsonFile);
-//        JSONArray overrides = new JSONArray();
-//        for (FurnitureModel furnitureModel : ModelManager.getInstance().getModels()) {
-//            try {
-//                furnitureModel.setNamespace(FurnitureCore.getNamespace());
-//                furnitureModel.save(getAssetDir());
-//            } catch (Exception e) {
-//                XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
-//                failedModels.add(furnitureModel.getIndex());
-//                continue;
-//            }
-//            // 5. modify item_frame.json
-//            //  "overrides": [
-//            //    {
-//            //      "predicate": {
-//            //        "custom_model_data": 1
-//            //      },
-//            //      "model": "tutorial/red_emerald_block"
-//            //    }
-//            //  ]
-//            JSONObject override = new JSONObject();
-//            JSONObject predicate = new JSONObject();
-//            predicate.put("custom_model_data", furnitureModel.getIndex());
-//            override.put("predicate", predicate);
-//            override.put("model", furnitureModel.getCallableName());
-//            overrides.add(override);
-//        }
-//        for (Integer index : failedModels) {
-//            ModelManager.getInstance().removeIndexedModel(index);
-//        }
-//        itemFrameJsonObj.put("overrides", overrides);
-//        JsonUtils.saveToFile(itemFrameJsonObj, itemFrameJsonFile);
+        for (FurnitureModel furnitureModel : modelLoad) {
+            try {
+                furnitureModel.setNamespace(FurnitureCore.getNamespace());
+                furnitureModel.save(getAssetDir());
+                ModelManager.getInstance().registerModel(furnitureModel);
+            } catch (Exception e) {
+                XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
+            }
+        }
 
         // 6. zip the cache/resource_pack directory to cache/furniture-core-resource-pack.zip
         if (getResourcePackZip().exists()) {
             if (!getResourcePackZip().delete()) {
-                status = Status.ERROR;
+                resourcePackStatus = ResourcePackStatus.ERROR;
                 throw new Exception("Failed to delete existing resource pack zip file.");
             }
         }
         ZipUtils.compressFolderContentToZip(getResourcePackCacheDir(), getResourcePackZip());
         if (!getResourcePackZip().exists()) {
-            status = Status.ERROR;
+            resourcePackStatus = ResourcePackStatus.ERROR;
             throw new Exception("Failed to generate resource pack zip file.");
         }
         resourcePackHash = GetFileHash(getResourcePackZip());
@@ -140,10 +158,10 @@ public class ResourcePackManager {
         XLogger.info("Resource pack generated successfully.");
         XLogger.info("Resource pack size: %s", GetResourcePackZipSize());
         XLogger.info("Resource pack hash: %s", BytesToHex(resourcePackHash));
-        status = Status.GENERATED;
+        resourcePackStatus = ResourcePackStatus.GENERATED;
 
         if (!DeleteFolderRecursively(getResourcePackCacheDir())) {
-            status = Status.ERROR;
+            resourcePackStatus = ResourcePackStatus.ERROR;
             throw new Exception("Failed to delete cache/resource_pack directory.");
         }
     }
@@ -171,7 +189,7 @@ public class ResourcePackManager {
         });
         server.start();
         XLogger.info("Resource pack is hosted at %s", getResourcePackUrl());
-        status = Status.READY;
+        resourcePackStatus = ResourcePackStatus.READY;
     }
 
     public void stopServer(){
@@ -199,7 +217,7 @@ public class ResourcePackManager {
      * @throws IllegalStateException if the resource pack is not ready
      */
     public void applyToPlayer(Player player) throws IllegalStateException {
-        if (status != Status.READY) {
+        if (resourcePackStatus != ResourcePackStatus.READY) {
             throw new IllegalStateException("Resource pack is not ready.");
         }
         XLogger.debug("Applying resource pack to %s", player.getName());
@@ -209,12 +227,12 @@ public class ResourcePackManager {
                 Configuration.resourcePackSettings.required);
     }
 
-    public Status getStatus() {
-        return status;
+    public ResourcePackStatus getStatus() {
+        return resourcePackStatus;
     }
 
     public boolean isReady() {
-        return status == Status.READY;
+        return resourcePackStatus == ResourcePackStatus.READY;
     }
 
     private static File getResourcePackCacheDir() {

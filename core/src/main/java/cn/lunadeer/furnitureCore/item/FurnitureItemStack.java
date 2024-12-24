@@ -5,6 +5,7 @@ import cn.lunadeer.furnitureCore.FurnitureModel;
 import cn.lunadeer.furnitureCore.ModelManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -12,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class FurnitureItemStack extends ItemStack {
     private FurnitureModel model;
+    private static final NamespacedKey pdcKey = new NamespacedKey("furniture_core", "item");
 
     /**
      * Cast an item stack to furniture item.
@@ -29,14 +31,13 @@ public class FurnitureItemStack extends ItemStack {
         if (meta == null) {
             throw new IllegalArgumentException("Item meta not found.");
         }
-        if (!meta.getPersistentDataContainer().has(FurnitureCore.getPDCKey())) {
+        if (!meta.getPersistentDataContainer().has(pdcKey, PersistentDataType.STRING)) {
             throw new IllegalArgumentException("Not a furniture item.");
         }
-        Integer index = meta.getPersistentDataContainer().get(FurnitureCore.getPDCKey(), PersistentDataType.INTEGER);
-        if (index == null) {
-            throw new IllegalArgumentException("Model index not found.");
+        if (meta.getItemModel() == null) {
+            throw new IllegalArgumentException("Not a furniture item.");
         }
-        FurnitureModel model = ModelManager.getInstance().get(index);
+        FurnitureModel model = ModelManager.getInstance().getModel(meta.getItemModel());
         if (model == null) {
             throw new IllegalArgumentException("Model not found.");
         }
@@ -60,7 +61,7 @@ public class FurnitureItemStack extends ItemStack {
      */
     public FurnitureItemStack(String callableName, Integer size) {
         super(Material.ITEM_FRAME, size);
-        FurnitureModel model = ModelManager.getInstance().getModelByCallableName(callableName);
+        FurnitureModel model = ModelManager.getInstance().getModel(callableName);
         if (model == null) {
             throw new IllegalArgumentException("Model not found.");
         }
@@ -88,11 +89,11 @@ public class FurnitureItemStack extends ItemStack {
     }
 
     private void setItemMeta(@NotNull FurnitureModel furnitureModel) {
-        this.model = furnitureModel;
+        model = furnitureModel;
         ItemMeta meta = getItemMeta();
         meta.displayName(Component.text(furnitureModel.getCustomName()));
-        meta.getPersistentDataContainer().set(FurnitureCore.getPDCKey(), PersistentDataType.INTEGER, furnitureModel.getIndex());
-        meta.setCustomModelData(furnitureModel.getIndex());
+        meta.getPersistentDataContainer().set(pdcKey, PersistentDataType.STRING, furnitureModel.getCallableNameWithNamespace());
+        meta.setItemModel(model.getItemModelKey());
         setItemMeta(meta);
     }
 

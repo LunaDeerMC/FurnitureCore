@@ -70,7 +70,7 @@ public class FurnitureModel {
             if (recipes != null) {
                 for (int i = 0; i < recipes.size(); i++) {
                     try {
-                        NamespacedKey pdcKey = new NamespacedKey(FurnitureCore.getInstance(), "furniture_" + furnitureModel.getModelName() + "_recipe_" + i);
+                        NamespacedKey pdcKey = new NamespacedKey(FurnitureCore.getNamespace(), "furniture_" + furnitureModel.getModelName() + "_recipe_" + i);
                         JSONObject recipe = recipes.getJSONObject(i);
                         String type = Objects.requireNonNullElse(recipe.getString("type"), "shapeless");
                         if (type.equals("shapeless")) {
@@ -81,7 +81,7 @@ public class FurnitureModel {
                             throw new Exception("Unknown recipe type: %s".formatted(type));
                         }
                     } catch (Exception e) {
-                        XLogger.err("Model %s recipe %d failed to load: %s".formatted(furnitureModel.getCallableName(), i, e.getMessage()));
+                        XLogger.err("Model %s recipe %d failed to load: %s".formatted(furnitureModel.getCallableNameWithNamespace(), i, e.getMessage()));
                     }
                 }
             }
@@ -94,7 +94,7 @@ public class FurnitureModel {
         }
     }
 
-    private Integer index;
+    private NamespacedKey itemModelKey;
     private String customName;
     private String modelName;
     private boolean ambientocclusion = true;
@@ -105,18 +105,11 @@ public class FurnitureModel {
     private final Map<NamespacedKey, CraftingRecipe> recipes = new HashMap<>();
     private boolean savedAndEffective = false;
 
-    public void setIndex(Integer index) {
-        if (savedAndEffective) {
-            throw new IllegalStateException("Model already effective, cannot change index.");
+    public NamespacedKey getItemModelKey() {
+        if (!savedAndEffective) {
+            throw new IllegalStateException("Model not effective yet.");
         }
-        this.index = index;
-    }
-
-    public Integer getIndex() {
-        if (index == null) {
-            throw new IllegalStateException("Index not set.");
-        }
-        return index;
+        return itemModelKey;
     }
 
     /**
@@ -212,11 +205,23 @@ public class FurnitureModel {
      *
      * @return the name of the model
      */
-    public String getCallableName() {
+    public String getCallableNameNoNamespace() {
         if (!savedAndEffective) {
             throw new IllegalStateException("Model not effective yet.");
         }
-        return namespace + ":" + (modelPath == null ? modelName : modelPath + "/" + modelName);
+        return modelPath == null ? modelName : modelPath + "/" + modelName;
+    }
+
+    /**
+     * Get the name of the model in the format of namespace:path/name
+     *
+     * @return the name of the model
+     */
+    public String getCallableNameWithNamespace() {
+        if (!savedAndEffective) {
+            throw new IllegalStateException("Model not effective yet.");
+        }
+        return namespace + ":" + getCallableNameNoNamespace();
     }
 
     /**
@@ -227,6 +232,7 @@ public class FurnitureModel {
      */
     public void save(File assetPath) throws Exception {
         // prepare save path
+        // assets/<namespace>/textures
         File textureSavePath = new File(assetPath, namespace + "/textures");
         if (texturePath != null) {
             textureSavePath = new File(textureSavePath, texturePath);
@@ -234,6 +240,7 @@ public class FurnitureModel {
         if (!textureSavePath.exists()) {
             boolean re = textureSavePath.mkdirs();
         }
+        // assets/<namespace>/models
         File modelSavePath = new File(assetPath, namespace + "/models");
         if (modelPath != null) {
             modelSavePath = new File(modelSavePath, modelPath);
@@ -241,6 +248,15 @@ public class FurnitureModel {
         if (!modelSavePath.exists()) {
             boolean re = modelSavePath.mkdirs();
         }
+        // assets/<namespace>/items
+        File itemModelPath = new File(assetPath, namespace + "/items");
+        if (modelPath != null) {
+            itemModelPath = new File(itemModelPath, modelPath);
+        }
+        if (!itemModelPath.exists()) {
+            boolean re = itemModelPath.mkdirs();
+        }
+
         // generate model json
         JSONObject json = new JSONObject();
         JSONObject textures = new JSONObject();
@@ -264,13 +280,25 @@ public class FurnitureModel {
             json.put("display", display);
         }
         json.put("gui_light", gui_light);
-        // save model json
-        JsonUtils.saveToFile(json, new File(modelSavePath, modelName + ".json"));
-        // add recipes
+        JsonUtils.saveToFile(json, new File(modelSavePath, this.modelName + ".json"));
+
+        // generate item model json
+        JSONObject itemModelJson = new JSONObject();
+        JSONObject model = new JSONObject();
+        model.put("type", "minecraft:model");
+        model.put("model", getCallableNameWithNamespace());
+        itemModelJson.put("model", model);
+        JsonUtils.saveToFile(itemModelJson, new File(itemModelPath, this.modelName + ".json"));
+
+        // generate item model key
+        itemModelKey = new NamespacedKey(namespace, getCallableNameNoNamespace());
+        savedAndEffective = true;
+    }
+
+    public void registerRecipe() {
         for (CraftingRecipe recipe : recipes.values()) {
             FurnitureCore.getInstance().getServer().addRecipe(recipe);
         }
-        savedAndEffective = true;
     }
 
     /**
