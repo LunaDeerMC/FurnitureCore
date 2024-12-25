@@ -43,6 +43,10 @@ public class ConfigurationManager {
         int currentVersion = versionField.getInt(null);
         load(clazz, file);
         if (versionField.getInt(null) != currentVersion) {
+            File backup = new File(file.getParentFile(), file.getName() + ".bak");
+            if (!file.renameTo(backup)) {
+                throw new Exception("Failed to backup the configuration file.");
+            }
             clazz.getField(versionFieldName).set(null, currentVersion);
             save(clazz, file);
         }

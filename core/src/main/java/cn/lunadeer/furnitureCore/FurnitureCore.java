@@ -21,7 +21,8 @@ public final class FurnitureCore extends JavaPlugin {
         new Notification(this);
         new XLogger(this);
         try {
-            ConfigurationManager.load(Configuration.class, new File(FurnitureCore.getInstance().getDataFolder(), "config.yml"), "version");
+            File configFile = new File(FurnitureCore.getInstance().getDataFolder(), "config.yml");
+            ConfigurationManager.load(Configuration.class, configFile, "version");
         } catch (Exception e) {
             XLogger.err("Failed to load configuration file: %s", e.getMessage());
         }
