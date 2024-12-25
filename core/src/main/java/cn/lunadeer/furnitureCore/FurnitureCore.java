@@ -1,5 +1,8 @@
 package cn.lunadeer.furnitureCore;
 
+import cn.lunadeer.furnitureCore.events.BreakFurniture;
+import cn.lunadeer.furnitureCore.events.CraftFurniture;
+import cn.lunadeer.furnitureCore.events.PlaceFurniture;
 import cn.lunadeer.furnitureCore.events.PlayerJoin;
 import cn.lunadeer.furnitureCore.items.ScrewdriverItemStack;
 import cn.lunadeer.furnitureCore.managers.ModelManagerImpl;
@@ -43,6 +46,9 @@ public final class FurnitureCore extends JavaPlugin {
         // Prepare recipe & event listeners
         getServer().addRecipe(ScrewdriverItemStack.getRecipe());
         getServer().getPluginManager().registerEvents(new PlayerJoin(), this);
+        getServer().getPluginManager().registerEvents(new PlaceFurniture(), this);
+        getServer().getPluginManager().registerEvents(new BreakFurniture(), this);
+        getServer().getPluginManager().registerEvents(new CraftFurniture(), this);
 
         // Prepare managers do model stuff
         getCacheDir().mkdirs();
