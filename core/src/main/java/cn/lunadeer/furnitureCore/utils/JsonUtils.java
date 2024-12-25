@@ -5,7 +5,19 @@ import com.alibaba.fastjson.JSONObject;
 
 import java.io.*;
 
+/**
+ * Utility class for JSON file operations.
+ * <p>
+ * This depends on the alibaba fastjson library.
+ */
 public class JsonUtils {
+    /**
+     * Load a JSON object from a file.
+     *
+     * @param dataFolder The file to load the JSON object from.
+     * @return The JSON object.
+     * @throws Exception If an error occurs while reading the file.
+     */
     public static JSONObject loadFromFile(File dataFolder) throws Exception {
         try (FileReader reader = new FileReader(dataFolder);
              BufferedReader bufferedReader = new BufferedReader(reader)) {
@@ -20,6 +32,13 @@ public class JsonUtils {
         }
     }
 
+    /**
+     * Save a JSON object to a file.
+     *
+     * @param json       The JSON object to save.
+     * @param dataFolder The file to save the JSON object to.
+     * @throws Exception If an error occurs while writing the file.
+     */
     public static void saveToFile(JSONObject json, File dataFolder) throws Exception {
         try (FileWriter fileWriter = new FileWriter(dataFolder);
              BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
