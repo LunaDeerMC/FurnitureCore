@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static cn.lunadeer.furnitureCore.utils.Common.DeleteFolderRecursively;
+
 /**
  * Load models, Generate resource pack, Serve resource pack, Apply resource pack to players
  */
@@ -131,6 +133,7 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
                 XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
             }
         }
+        XLogger.info("Resource pack will generate with %s models.", ModelManager.getInstance().getModels().size());
 
         // 6. zip the cache/resource_pack directory to cache/furniture-core-resource-pack.zip
         if (getResourcePackZip().exists()) {
@@ -233,28 +236,6 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
 
     private static String getResourcePackUrl() {
         return "http://%s:%d/%s".formatted(Configuration.resourcePackServer.host, Configuration.resourcePackServer.port, getResourcePackZip().getName());
-    }
-
-    /**
-     * Delete a folder recursively.
-     *
-     * @param folder the folder to delete
-     * @return true if success, false if failed
-     */
-    private static boolean DeleteFolderRecursively(File folder) {
-        File[] files = folder.listFiles();
-        if (files != null) {
-            for (File f : files) {
-                if (f.isDirectory()) {
-                    DeleteFolderRecursively(f);
-                } else {
-                    if (!f.delete()) {
-                        return false;
-                    }
-                }
-            }
-        }
-        return folder.delete();
     }
 
     /**

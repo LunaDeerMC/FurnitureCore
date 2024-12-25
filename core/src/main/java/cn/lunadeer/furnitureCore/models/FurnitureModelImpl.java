@@ -19,6 +19,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.*;
 
+import static cn.lunadeer.furnitureCore.utils.Common.DeleteFolderRecursively;
+
 public class FurnitureModelImpl implements FurnitureModel {
 
     public static FurnitureModelImpl loadModel(File modelFile) throws Exception {
@@ -42,7 +44,7 @@ public class FurnitureModelImpl implements FurnitureModel {
             furnitureModel.ambientocclusion = json.containsKey("ambientocclusion") ? json.getBoolean("ambientocclusion") : true;
             furnitureModel.display = json.containsKey("display") ? json.getJSONObject("display") : null;
             furnitureModel.gui_light = json.containsKey("gui_light") ? json.getString("gui_light") : "side";
-            furnitureModel.elements = json.getJSONObject("elements");
+            furnitureModel.elements = json.getJSONArray("elements");
             if (furnitureModel.elements == null) {
                 throw new Exception("Elements not found in json model file.");
             }
@@ -74,7 +76,7 @@ public class FurnitureModelImpl implements FurnitureModel {
         } finally {
             // 6. clean the cache directory in finally block
             if (unzipCache.exists()) {
-                boolean re = unzipCache.delete();
+                DeleteFolderRecursively(unzipCache);
             }
         }
     }
@@ -83,7 +85,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     private String customName;
     private String modelName;
     private boolean ambientocclusion = true;
-    private JSONObject elements;
+    private JSONArray elements;
     private JSONObject display;
     private String gui_light = "side";
     private final Map<String, BufferedImage> textures = new HashMap<>();
@@ -249,6 +251,8 @@ public class FurnitureModelImpl implements FurnitureModel {
         json.put("gui_light", gui_light);
         JsonUtils.saveToFile(json, new File(modelSavePath, this.modelName + ".json"));
 
+        savedAndEffective = true;   // from now on, the model is effective
+
         // generate item model json
         JSONObject itemModelJson = new JSONObject();
         JSONObject model = new JSONObject();
@@ -259,8 +263,6 @@ public class FurnitureModelImpl implements FurnitureModel {
 
         // generate item model key
         itemModelKey = new NamespacedKey(namespace, getCallableNameNoNamespace());
-
-        savedAndEffective = true;
 
         // parse recipes
         if (recipesJson != null) {
