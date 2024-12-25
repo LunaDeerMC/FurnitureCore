@@ -44,6 +44,9 @@ public class ConfigurationManager {
         load(clazz, file);
         if (versionField.getInt(null) != currentVersion) {
             File backup = new File(file.getParentFile(), file.getName() + ".bak");
+            if (backup.exists() && !backup.delete()) {
+                throw new Exception("Failed to delete the backup configuration file.");
+            }
             if (!file.renameTo(backup)) {
                 throw new Exception("Failed to backup the configuration file.");
             }
@@ -81,9 +84,6 @@ public class ConfigurationManager {
                 XLogger.info("Writing %s to %s.", field.getName(), key);
                 yaml.set(key, field.get(null));
             }
-            if (field.isAnnotationPresent(Comment.class)) {
-                yaml.setComments(key, List.of(field.getAnnotation(Comment.class).value()));
-            }
             if (field.isAnnotationPresent(Comments.class)) {
                 yaml.setComments(key, List.of(field.getAnnotation(Comments.class).value()));
             }
@@ -98,9 +98,6 @@ public class ConfigurationManager {
                 writeConfigurationPart(yaml, (ConfigurationPart) field.get(obj), newKey);
             } else {
                 yaml.set(newKey, field.get(obj));
-            }
-            if (field.isAnnotationPresent(Comment.class)) {
-                yaml.setComments(newKey, List.of(field.getAnnotation(Comment.class).value()));
             }
             if (field.isAnnotationPresent(Comments.class)) {
                 yaml.setComments(newKey, List.of(field.getAnnotation(Comments.class).value()));
