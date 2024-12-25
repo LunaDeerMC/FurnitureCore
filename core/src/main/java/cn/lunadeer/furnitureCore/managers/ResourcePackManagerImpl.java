@@ -1,5 +1,8 @@
-package cn.lunadeer.furnitureCore;
+package cn.lunadeer.furnitureCore.managers;
 
+import cn.lunadeer.furnitureCore.Configuration;
+import cn.lunadeer.furnitureCore.FurnitureCore;
+import cn.lunadeer.furnitureCore.models.FurnitureModelImpl;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import cn.lunadeer.furnitureCoreApi.managers.ModelManager;

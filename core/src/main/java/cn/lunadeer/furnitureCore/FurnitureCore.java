@@ -2,6 +2,8 @@ package cn.lunadeer.furnitureCore;
 
 import cn.lunadeer.furnitureCore.events.PlayerJoin;
 import cn.lunadeer.furnitureCore.items.ScrewdriverItemStack;
+import cn.lunadeer.furnitureCore.managers.ModelManagerImpl;
+import cn.lunadeer.furnitureCore.managers.ResourcePackManagerImpl;
 import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.bStatsMetrics;

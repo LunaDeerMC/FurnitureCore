@@ -1,5 +1,6 @@
-package cn.lunadeer.furnitureCore;
+package cn.lunadeer.furnitureCore.managers;
 
+import cn.lunadeer.furnitureCore.FurnitureCore;
 import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import org.bukkit.NamespacedKey;

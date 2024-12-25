@@ -1,5 +1,6 @@
-package cn.lunadeer.furnitureCore;
+package cn.lunadeer.furnitureCore.models;
 
+import cn.lunadeer.furnitureCore.FurnitureCore;
 import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCore.utils.ImageUtils;
 import cn.lunadeer.furnitureCore.utils.JsonUtils;
