@@ -3,6 +3,7 @@ package cn.lunadeer.furnitureCore.events;
 import cn.lunadeer.furnitureCore.blocks.FurnitureBlock;
 import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCore.utils.XLogger;
+import cn.lunadeer.furnitureCoreApi.models.Rotation;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
@@ -38,7 +39,12 @@ public class PlaceFurniture implements Listener {
             return;
         }
         // do furniture place logic
-        ItemDisplay itemDisplay = new FurnitureBlock(furnitureItemStack, location).tryPlace(event.getPlayer(), null); // todo figure out block face
+        ItemDisplay itemDisplay = new FurnitureBlock(furnitureItemStack, location).
+                tryPlace(
+                        event.getPlayer(),
+                        event.getBlockFace(),
+                        Rotation.fromYaw(event.getPlayer().getYaw() + 180)  // +180 to make it face the player
+                );
         if (itemDisplay != null) {
             event.setCancelled(true);
             event.getItemStack().setAmount(event.getItemStack().getAmount() - 1);

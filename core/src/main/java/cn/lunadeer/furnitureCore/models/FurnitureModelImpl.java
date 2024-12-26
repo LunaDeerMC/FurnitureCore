@@ -46,6 +46,8 @@ public class FurnitureModelImpl implements FurnitureModel {
             furnitureModel.gui_light = json.containsKey("gui_light") ? json.getString("gui_light") : "side";
             furnitureModel.groups = json.getJSONArray("groups");
             furnitureModel.elements = json.getJSONArray("elements");
+            furnitureModel.canRotate = json.containsKey("can_rotate") ? json.getBoolean("can_rotate") : true;
+            furnitureModel.canHanging = json.containsKey("can_hanging") ? json.getBoolean("can_hanging") : false;
             if (furnitureModel.elements == null) {
                 throw new Exception("Elements not found in json model file.");
             }
@@ -85,6 +87,8 @@ public class FurnitureModelImpl implements FurnitureModel {
     private NamespacedKey itemModelKey;
     private String customName;
     private String modelName;
+    private boolean canRotate = true;
+    private boolean canHanging = false; // if can hanging the rotation will be disabled
     private boolean ambientocclusion = true;
     private JSONArray elements;
     private JSONArray groups;
@@ -148,6 +152,16 @@ public class FurnitureModelImpl implements FurnitureModel {
             throw new IllegalStateException("Model not effective yet, cannot get prefix path.");
         }
         return prefixPath;
+    }
+
+    @Override
+    public Boolean canRotate() {
+        return this.canRotate;
+    }
+
+    @Override
+    public Boolean canHanging() {
+        return this.canHanging;
     }
 
     /**

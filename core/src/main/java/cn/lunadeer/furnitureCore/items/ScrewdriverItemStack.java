@@ -42,7 +42,10 @@ public class ScrewdriverItemStack extends ItemStack {
         meta.displayName(Component.text("Screwdriver"));
         meta.getPersistentDataContainer().set(pdcKey, PersistentDataType.INTEGER, 1);
         meta.setItemModel(pdcKey);
-        meta.lore(List.of(Component.text("Left click to break furniture.")));
+        meta.lore(List.of(
+                Component.text("Left click to break furniture."),
+                Component.text("Right click to rotate furniture.")
+        ));
         setItemMeta(meta);
     }
 

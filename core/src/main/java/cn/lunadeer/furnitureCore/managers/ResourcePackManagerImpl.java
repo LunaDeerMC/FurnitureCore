@@ -324,7 +324,7 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         return hexString.toString();
     }
 
-    private Map<String, AtlasSource> atlasSources = Map.of(
+    private final Map<String, AtlasSource> atlasSources = Map.of(
             "tools", new AtlasSource("tools"),
             "furniture", new AtlasSource("furniture")
     );

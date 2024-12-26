@@ -4,6 +4,10 @@ import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCoreApi.events.FurnitureBrokenEvent;
 import cn.lunadeer.furnitureCoreApi.events.FurniturePlacedEvent;
+import cn.lunadeer.furnitureCoreApi.events.HangingFurniturePlacedEvent;
+import cn.lunadeer.furnitureCoreApi.events.RotateFurniturePlacedEvent;
+import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
+import cn.lunadeer.furnitureCoreApi.models.Rotation;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -98,12 +102,26 @@ public class FurnitureBlock {
      *
      * @param player    The player who places the item display.
      * @param blockFace The block face to place the item display.
+     * @param rotate    The rotation of the item display.
      * @return The item display. Null if failed.
      */
-    public ItemDisplay tryPlace(Player player, BlockFace blockFace) {
-        if (!new FurniturePlacedEvent(player, location, blockFace, furnitureItemStack.getModel()).callEvent()) {
-            XLogger.debug("FurniturePlacedEvent cancelled");
-            return null;
+    public ItemDisplay tryPlace(Player player, BlockFace blockFace, Rotation rotate) {
+        FurnitureModel model = furnitureItemStack.getModel();
+        if (model.canHanging()) {
+            if (!new HangingFurniturePlacedEvent(player, location, furnitureItemStack.getModel(), blockFace).callEvent()) {
+                XLogger.debug("HangingFurniturePlacedEvent cancelled");
+                return null;
+            }
+        } else if (model.canRotate()) {
+            if (!new RotateFurniturePlacedEvent(player, location, furnitureItemStack.getModel(), rotate).callEvent()) {
+                XLogger.debug("RotateFurniturePlacedEvent cancelled");
+                return null;
+            }
+        } else {
+            if (!new FurniturePlacedEvent(player, location, furnitureItemStack.getModel()).callEvent()) {
+                XLogger.debug("FurniturePlacedEvent cancelled");
+                return null;
+            }
         }
         location.getBlock().setType(getPlaceholderBlockType());
         location.getBlock().getState().update();
@@ -113,6 +131,11 @@ public class FurnitureBlock {
         itemDisplay.getPersistentDataContainer().set(new NamespacedKey("FurnitureCore".toLowerCase(Locale.ROOT), "furniture"), PersistentDataType.BOOLEAN, true); // optimize from DeerFolia will skip entity on tick with this key
         itemDisplay.setGravity(false);
         itemDisplay.setInvulnerable(true);
+        if (model.canHanging()) {
+            // todo calculate the yaw and pitch
+        } else if (model.canRotate()) {
+            itemDisplay.setRotation(rotate.getAngle(), itemDisplay.getPitch());
+        }
         location.getWorld().getPersistentDataContainer().set(key, PersistentDataType.STRING, itemDisplay.getUniqueId().toString());
         return itemDisplay;
     }
@@ -131,7 +154,7 @@ public class FurnitureBlock {
         location.getBlock().getState().update();
         itemDisplay.remove();
         location.getWorld().getPersistentDataContainer().remove(key);
-        location.getWorld().dropItem(location, new FurnitureItemStack(furnitureItemStack,1 ));
+        location.getWorld().dropItem(location, new FurnitureItemStack(furnitureItemStack, 1));
         return true;
     }
 
