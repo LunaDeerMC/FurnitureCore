@@ -124,15 +124,18 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         }
 
         // 4. save all models (get from ModelManager)
+        int recipeCount = 0;
         for (FurnitureModelImpl furnitureModel : modelLoad) {
             try {
                 furnitureModel.setNamespace(FurnitureCore.getNamespace());
                 furnitureModel.save(getAssetDir());
                 ModelManager.getInstance().registerModel(furnitureModel);
+                recipeCount += furnitureModel.getRecipes().size();
             } catch (Exception e) {
                 XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
             }
         }
+        XLogger.info("Registered %d recipes.", recipeCount);
         XLogger.info("Resource pack will generate with %s models.", ModelManager.getInstance().getModels().size());
 
         // 6. zip the cache/resource_pack directory to cache/furniture-core-resource-pack.zip

@@ -1,28 +1,41 @@
 package cn.lunadeer.furnitureCore.events;
 
-import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
+import cn.lunadeer.furnitureCore.blocks.FurnitureBlock;
 import cn.lunadeer.furnitureCore.items.ScrewdriverItemStack;
 import cn.lunadeer.furnitureCore.utils.XLogger;
-import cn.lunadeer.furnitureCoreApi.events.FurnitureBrokenEvent;
-import org.bukkit.Location;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
-import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.persistence.PersistentDataType;
-
-import java.util.UUID;
-
-import static cn.lunadeer.furnitureCore.utils.Common.LocationToHash;
 
 public class BreakFurniture implements Listener {
 
     @EventHandler
+    public void onBreakBarrier(BlockBreakEvent event) {
+        if (event.getPlayer().getGameMode() != GameMode.CREATIVE) {
+            return;
+        }
+        if (event.getBlock().getType() != Material.BARRIER) {
+            return;
+        }
+        try {
+            boolean success = new FurnitureBlock(event.getBlock()).tryBreak(event.getPlayer());
+            if (success) {
+                event.setCancelled(true);
+            }
+        } catch (IllegalArgumentException e) {
+            XLogger.debug(e.getMessage());
+        }
+    }
+
+    @EventHandler
     public void onBreakFurniture(PlayerInteractEvent event) {
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE) {
+            return;
+        }
         if (!event.getAction().isLeftClick()) {
             return;
         }
@@ -33,7 +46,7 @@ public class BreakFurniture implements Listener {
         if (block == null) {
             return;
         }
-        if (block.getType() != Material.BARRIER) {
+        if (block.getType().getHardness() != -1) {
             return;
         }
         try {
@@ -42,43 +55,20 @@ public class BreakFurniture implements Listener {
             XLogger.debug("Not a screwdriver: %s", e.getMessage());
             return;
         }
-        Location location = block.getLocation();
-        // try to break the block
-        if(!new BlockBreakEvent(block, event.getPlayer()).callEvent()) {
+        // call bukkit event to check if the block can be broken
+        if (!new BlockBreakEvent(block, event.getPlayer()).callEvent()) {
+            XLogger.debug("BlockBreakEvent cancelled");
             return;
         }
-        // get item display uid
-        NamespacedKey key = new NamespacedKey("furniture", LocationToHash(location));
-        String itemDisplayUidStr = location.getWorld().getPersistentDataContainer().get(key, PersistentDataType.STRING);
-        if (itemDisplayUidStr == null) {
-            XLogger.info("ItemDisplay not found by key: %s", key);
-            return;
-        }
-        // get item display
-        UUID itemDisplayUid = UUID.fromString(itemDisplayUidStr);
-        ItemDisplay itemDisplay = (ItemDisplay) location.getWorld().getEntity(itemDisplayUid);
-        if (itemDisplay == null) {
-            XLogger.debug("ItemDisplay not found by uid: %s", itemDisplayUidStr);
-            return;
-        }
-        // get furniture item stack
-        FurnitureItemStack furnitureItemStack;
+        // do furniture break logic
         try {
-            furnitureItemStack = new FurnitureItemStack(itemDisplay.getItemStack());
+            boolean success = new FurnitureBlock(block).tryBreak(event.getPlayer());
+            if (success) {
+                event.setCancelled(true);
+            }
         } catch (IllegalArgumentException e) {
-            XLogger.debug("Not a furniture: %s", e.getMessage());
-            return;
+            XLogger.debug(e.getMessage());
         }
-
-        // call FurnitureBrokenEvent if not cancelled do the following
-        if (!new FurnitureBrokenEvent(event.getPlayer(), itemDisplay, furnitureItemStack.getModel()).callEvent()) {
-            XLogger.debug("FurnitureBrokenEvent cancelled");
-            return;
-        }
-        block.setType(Material.AIR);
-        itemDisplay.remove();
-        location.getWorld().getPersistentDataContainer().remove(key);
-        location.getWorld().dropItem(location, furnitureItemStack);
     }
 
 }

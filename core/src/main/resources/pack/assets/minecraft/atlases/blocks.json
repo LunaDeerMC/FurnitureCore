@@ -4,6 +4,11 @@
             "type": "directory",
             "source": "tools",
             "prefix": "tools/"
+        },
+        {
+            "type": "directory",
+            "source": "furniture",
+            "prefix": "furniture/"
         }
     ]
 }

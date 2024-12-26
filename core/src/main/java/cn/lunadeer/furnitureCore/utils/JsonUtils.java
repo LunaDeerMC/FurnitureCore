@@ -40,6 +40,7 @@ public class JsonUtils {
      * @throws Exception If an error occurs while writing the file.
      */
     public static void saveToFile(JSONObject json, File dataFolder) throws Exception {
+        dataFolder.getParentFile().mkdirs();
         try (FileWriter fileWriter = new FileWriter(dataFolder);
              BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
             bufferedWriter.write(JSON.toJSONString(json, true));

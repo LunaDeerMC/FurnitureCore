@@ -44,6 +44,7 @@ public class FurnitureModelImpl implements FurnitureModel {
             furnitureModel.ambientocclusion = json.containsKey("ambientocclusion") ? json.getBoolean("ambientocclusion") : true;
             furnitureModel.display = json.containsKey("display") ? json.getJSONObject("display") : null;
             furnitureModel.gui_light = json.containsKey("gui_light") ? json.getString("gui_light") : "side";
+            furnitureModel.groups = json.getJSONArray("groups");
             furnitureModel.elements = json.getJSONArray("elements");
             if (furnitureModel.elements == null) {
                 throw new Exception("Elements not found in json model file.");
@@ -86,6 +87,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     private String modelName;
     private boolean ambientocclusion = true;
     private JSONArray elements;
+    private JSONArray groups;
     private JSONObject display;
     private String gui_light = "side";
     private final Map<String, BufferedImage> textures = new HashMap<>();
@@ -116,8 +118,8 @@ public class FurnitureModelImpl implements FurnitureModel {
         return modelName;
     }
 
-    private String texturePath = null;
-    private String modelPath = null;
+    private String texturePath = "furniture";
+    private String modelPath = "furniture";
     private String namespace = "minecraft";
 
     /**
@@ -232,11 +234,11 @@ public class FurnitureModelImpl implements FurnitureModel {
         for (String key : this.textures.keySet()) {
             // generate texture file
             String name = this.modelName + "_" + key;
+            File textureFile = new File(textureSavePath, name + ".png");
+            ImageUtils.saveImage(this.textures.get(key), textureFile, "png");
             if (texturePath != null) {
                 name = texturePath + "/" + name;
             }
-            File textureFile = new File(textureSavePath, name + ".png");
-            ImageUtils.saveImage(this.textures.get(key), textureFile, "png");
             if (namespace != null) {
                 name = namespace + ":" + name;
             }
@@ -245,6 +247,9 @@ public class FurnitureModelImpl implements FurnitureModel {
         json.put("ambientocclusion", ambientocclusion);
         json.put("textures", textures);
         json.put("elements", elements);
+        if (groups != null) {
+            json.put("groups", groups);
+        }
         if (display != null) {
             json.put("display", display);
         }
@@ -297,6 +302,11 @@ public class FurnitureModelImpl implements FurnitureModel {
         for (CraftingRecipe recipe : recipes.values()) {
             FurnitureCore.getInstance().getServer().removeRecipe(recipe.getKey());
         }
+    }
+
+    @Override
+    public Map<NamespacedKey, CraftingRecipe> getRecipes() {
+        return recipes;
     }
 
     private static ShapedRecipe getShapedRecipe(int i, JSONObject recipe, NamespacedKey pdcKey, FurnitureModel furnitureModel) throws Exception {

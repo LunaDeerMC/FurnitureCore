@@ -39,6 +39,7 @@ public class ImageUtils {
      * @throws IOException If an error occurs while writing the image.
      */
     public static void saveImage(BufferedImage image, File outputFile, String format) throws IOException {
+        outputFile.getParentFile().mkdirs();
         ImageIO.write(image, format, outputFile);
     }
 
@@ -52,7 +53,7 @@ public class ImageUtils {
      */
     public static void saveImage(BufferedImage image, String outputPath, String format) throws IOException {
         File outputFile = new File(outputPath);
-        ImageIO.write(image, format, outputFile);
+        saveImage(image, outputFile, format);
     }
 
 }

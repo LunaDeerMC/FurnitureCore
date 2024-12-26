@@ -14,6 +14,11 @@ public class FurnitureItemStack extends ItemStack {
     private FurnitureModel model;
     private static final NamespacedKey pdcKey = new NamespacedKey("furniture_core", "item");
 
+    public FurnitureItemStack(@NotNull ItemStack item, Integer size) throws IllegalArgumentException {
+        this(item);
+        setAmount(size);
+    }
+
     /**
      * Cast an item stack to furniture item.
      * If the item stack is not a furniture item, an exception will be thrown.

@@ -1,40 +1,28 @@
 package cn.lunadeer.furnitureCore.events;
 
-import cn.lunadeer.furnitureCore.FurnitureCore;
+import cn.lunadeer.furnitureCore.blocks.FurnitureBlock;
 import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.persistence.PersistentDataType;
-
-import static cn.lunadeer.furnitureCore.utils.Common.LocationToHash;
 
 public class PlaceFurniture implements Listener {
 
     @EventHandler
-    public void onPlaceFurniture(PlayerInteractEvent event) {
-        if (!event.getAction().isRightClick()) {
-            return;
-        }
-        if (event.getItem() == null) {
-            return;
-        }
-        Block clickedBlock = event.getClickedBlock();
-        if (clickedBlock == null) {
-            return;
-        }
+    public void onPlaceFurniture(HangingPlaceEvent event) {
+        Block clickedBlock = event.getBlock();
         FurnitureItemStack furnitureItemStack;
+        if (event.getItemStack() == null) {
+            return;
+        }
         try {
-            furnitureItemStack = new FurnitureItemStack(event.getItem());
+            furnitureItemStack = new FurnitureItemStack(event.getItemStack());
         } catch (IllegalArgumentException e) {
             XLogger.debug("Not a furniture: %s", e.getMessage());
             return;
@@ -44,18 +32,17 @@ public class PlaceFurniture implements Listener {
             XLogger.debug("Block is solid");
             return;
         }
-        // try to place the block
+        // call build event to check if the block can be placed
         if (!new BlockPlaceEvent(location.getBlock(), location.getBlock().getState(), clickedBlock, furnitureItemStack, event.getPlayer(), true, EquipmentSlot.HAND).callEvent()) {
             XLogger.debug("BlockPlaceEvent cancelled");
             return;
         }
-
-        // todo call FurniturePlacedEvent if not cancelled do the following
-        location.getBlock().setType(Material.BARRIER);
-        ItemDisplay itemDisplay = (ItemDisplay) location.getWorld().spawnEntity(location, EntityType.ITEM_DISPLAY);
-        // todo: configure item display to proper size and rotation
-        NamespacedKey key = new NamespacedKey("furniture", LocationToHash(location));
-        location.getWorld().getPersistentDataContainer().set(key, PersistentDataType.STRING, itemDisplay.getUniqueId().toString());
+        // do furniture place logic
+        ItemDisplay itemDisplay = new FurnitureBlock(furnitureItemStack, location).tryPlace(event.getPlayer(), null); // todo figure out block face
+        if (itemDisplay != null) {
+            event.setCancelled(true);
+            event.getItemStack().setAmount(event.getItemStack().getAmount() - 1);
+        }
     }
 
 }
