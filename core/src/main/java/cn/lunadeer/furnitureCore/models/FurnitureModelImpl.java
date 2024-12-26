@@ -122,7 +122,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     private String namespace = "minecraft";
 
     /**
-     * Set the path of the prefix
+     * Set the model prefix path.
      * <p>
      * e.g. "beds" will make the model saved to "assets/namespace/models/beds". Texture saved to "assets/namespace/textures/beds".
      * Callable name will be "namespace:beds/model_or_texture_name".
@@ -131,7 +131,7 @@ public class FurnitureModelImpl implements FurnitureModel {
      */
     public void setPrefixPath(String path) {
         if (savedAndEffective) {
-            throw new IllegalStateException("Model already effective, cannot change texture path.");
+            throw new IllegalStateException("Model already effective, cannot change prefix path.");
         }
         if (path.startsWith("/")) {
             path = path.substring(1);
@@ -145,7 +145,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     @Override
     public String getPrefixPath() {
         if (!savedAndEffective) {
-            throw new IllegalStateException("Model not effective yet.");
+            throw new IllegalStateException("Model not effective yet, cannot get prefix path.");
         }
         return prefixPath;
     }
