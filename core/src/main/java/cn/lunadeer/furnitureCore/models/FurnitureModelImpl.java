@@ -118,50 +118,36 @@ public class FurnitureModelImpl implements FurnitureModel {
         return modelName;
     }
 
-    private String texturePath = "furniture";
-    private String modelPath = "furniture";
+    private String prefixPath = "furniture";
     private String namespace = "minecraft";
 
     /**
-     * Set the path of the texture
+     * Set the path of the prefix
      * <p>
-     * e.g. "beds" will make the model saved to "assets/namespace/textures/beds".
-     * Texture's callable name will be "namespace:beds/textureName".
+     * e.g. "beds" will make the model saved to "assets/namespace/models/beds". Texture saved to "assets/namespace/textures/beds".
+     * Callable name will be "namespace:beds/model_or_texture_name".
      *
-     * @param texturePath the path of the texture
+     * @param path the path of the texture
      */
-    public void setTexturePath(String texturePath) {
+    public void setPrefixPath(String path) {
         if (savedAndEffective) {
             throw new IllegalStateException("Model already effective, cannot change texture path.");
         }
-        if (texturePath.startsWith("/")) {
-            texturePath = texturePath.substring(1);
+        if (path.startsWith("/")) {
+            path = path.substring(1);
         }
-        if (texturePath.endsWith("/")) {
-            texturePath = texturePath.substring(0, texturePath.length() - 1);
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
         }
-        this.texturePath = texturePath;
+        this.prefixPath = path;
     }
 
-    /**
-     * Set the path of the model
-     * <p>
-     * e.g. "beds" will make the model saved to "assets/namespace/models/beds".
-     * Model's callable name will be "namespace:beds/modelName".
-     *
-     * @param modelPath the path of the model
-     */
-    public void setModelPath(String modelPath) {
-        if (savedAndEffective) {
-            throw new IllegalStateException("Model already effective, cannot change model path.");
+    @Override
+    public String getPrefixPath() {
+        if (!savedAndEffective) {
+            throw new IllegalStateException("Model not effective yet.");
         }
-        if (modelPath.startsWith("/")) {
-            modelPath = modelPath.substring(1);
-        }
-        if (modelPath.endsWith("/")) {
-            modelPath = modelPath.substring(0, modelPath.length() - 1);
-        }
-        this.modelPath = modelPath;
+        return prefixPath;
     }
 
     /**
@@ -184,7 +170,7 @@ public class FurnitureModelImpl implements FurnitureModel {
         if (!savedAndEffective) {
             throw new IllegalStateException("Model not effective yet.");
         }
-        return modelPath == null ? modelName : modelPath + "/" + modelName;
+        return prefixPath == null ? modelName : prefixPath + "/" + modelName;
     }
 
     @Override
@@ -205,27 +191,23 @@ public class FurnitureModelImpl implements FurnitureModel {
         // prepare save path
         // assets/<namespace>/textures
         File textureSavePath = new File(assetPath, namespace + "/textures");
-        if (texturePath != null) {
-            textureSavePath = new File(textureSavePath, texturePath);
-        }
-        if (!textureSavePath.exists()) {
-            boolean re = textureSavePath.mkdirs();
-        }
         // assets/<namespace>/models
         File modelSavePath = new File(assetPath, namespace + "/models");
-        if (modelPath != null) {
-            modelSavePath = new File(modelSavePath, modelPath);
-        }
-        if (!modelSavePath.exists()) {
-            boolean re = modelSavePath.mkdirs();
-        }
         // assets/<namespace>/items
         File itemModelPath = new File(assetPath, namespace + "/items");
-        if (modelPath != null) {
-            itemModelPath = new File(itemModelPath, modelPath);
+        if (prefixPath != null) {
+            textureSavePath = new File(textureSavePath, prefixPath);
+            modelSavePath = new File(modelSavePath, prefixPath);
+            itemModelPath = new File(itemModelPath, prefixPath);
         }
-        if (!itemModelPath.exists()) {
-            boolean re = itemModelPath.mkdirs();
+        if (!textureSavePath.exists() && !textureSavePath.mkdirs()) {
+            throw new Exception("Failed to create texture save path: %s".formatted(textureSavePath.toString()));
+        }
+        if (!modelSavePath.exists() && !modelSavePath.mkdirs()) {
+            throw new Exception("Failed to create model save path: %s".formatted(modelSavePath.toString()));
+        }
+        if (!itemModelPath.exists() && !itemModelPath.mkdirs()) {
+            throw new Exception("Failed to create item model save path: %s".formatted(itemModelPath.toString()));
         }
 
         // generate model json
@@ -236,8 +218,8 @@ public class FurnitureModelImpl implements FurnitureModel {
             String name = this.modelName + "_" + key;
             File textureFile = new File(textureSavePath, name + ".png");
             ImageUtils.saveImage(this.textures.get(key), textureFile, "png");
-            if (texturePath != null) {
-                name = texturePath + "/" + name;
+            if (prefixPath != null) {
+                name = prefixPath + "/" + name;
             }
             if (namespace != null) {
                 name = namespace + ":" + name;
@@ -307,6 +289,11 @@ public class FurnitureModelImpl implements FurnitureModel {
     @Override
     public Map<NamespacedKey, CraftingRecipe> getRecipes() {
         return recipes;
+    }
+
+    @Override
+    public Boolean isEffect() {
+        return savedAndEffective;
     }
 
     private static ShapedRecipe getShapedRecipe(int i, JSONObject recipe, NamespacedKey pdcKey, FurnitureModel furnitureModel) throws Exception {

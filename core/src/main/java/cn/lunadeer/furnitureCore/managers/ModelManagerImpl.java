@@ -48,7 +48,10 @@ public class ModelManagerImpl extends ModelManager {
     }
 
     @Override
-    public void registerModel(FurnitureModel model) {
+    public void registerModel(FurnitureModel model) throws IllegalArgumentException {
+        if (!model.isEffect()) {
+            throw new IllegalArgumentException("Model is not effect, cannot be registered.");
+        }
         modelReady.put(model.getItemModelKey(), model);
         model.registerRecipe();
     }

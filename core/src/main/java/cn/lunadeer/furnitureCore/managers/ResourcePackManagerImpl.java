@@ -3,10 +3,14 @@ package cn.lunadeer.furnitureCore.managers;
 import cn.lunadeer.furnitureCore.Configuration;
 import cn.lunadeer.furnitureCore.FurnitureCore;
 import cn.lunadeer.furnitureCore.models.FurnitureModelImpl;
+import cn.lunadeer.furnitureCore.utils.JsonUtils;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
 import cn.lunadeer.furnitureCoreApi.managers.ResourcePackManager;
+import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.sun.net.httpserver.HttpServer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -20,6 +24,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static cn.lunadeer.furnitureCore.utils.Common.DeleteFolderRecursively;
 
@@ -52,8 +57,6 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
     private final List<String> preDefinedResourcePackFiles = List.of(
             "pack.mcmeta.json",
             "pack.png",
-
-            "assets/minecraft/atlases/blocks.json",
 
             "assets/furniture_core/items/tools/screwdriver.json",
             "assets/furniture_core/models/tools/screwdriver.json",
@@ -128,7 +131,7 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         for (FurnitureModelImpl furnitureModel : modelLoad) {
             try {
                 furnitureModel.setNamespace(FurnitureCore.getNamespace());
-                furnitureModel.save(getAssetDir());
+                furnitureModel.save(getAssetDir());     // <<<<<<<<<<<<<<   from now the model is effectively
                 ModelManager.getInstance().registerModel(furnitureModel);
                 recipeCount += furnitureModel.getRecipes().size();
             } catch (Exception e) {
@@ -137,6 +140,26 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         }
         XLogger.info("Registered %d recipes.", recipeCount);
         XLogger.info("Resource pack will generate with %s models.", ModelManager.getInstance().getModels().size());
+
+        // 5. generate atlas files
+        File atlasDir = new File(getAssetDir(), "minecraft/atlases");
+        JSONObject blocksAtlas = new JSONObject(); // blocks.json
+        for (FurnitureModel model : ModelManager.getInstance().getModels()) {
+            if (atlasSources.containsKey(model.getPrefixPath())) {
+                continue;
+            }
+            atlasSources.put(model.getPrefixPath(), new AtlasSource(model.getPrefixPath()));
+        }
+        JSONArray sources = new JSONArray();
+        for (AtlasSource source : atlasSources.values()) {
+            JSONObject sourceJson = new JSONObject();
+            sourceJson.put("type", source.type);
+            sourceJson.put("source", source.source);
+            sourceJson.put("prefix", source.prefix);
+            sources.add(sourceJson);
+        }
+        blocksAtlas.put("sources", sources);
+        JsonUtils.saveToFile(blocksAtlas, new File(atlasDir, "blocks.json"));
 
         // 6. zip the cache/resource_pack directory to cache/furniture-core-resource-pack.zip
         if (getResourcePackZip().exists()) {
@@ -299,6 +322,21 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
             hexString.append(hex);
         }
         return hexString.toString();
+    }
+
+    private Map<String, AtlasSource> atlasSources = Map.of(
+            "tools", new AtlasSource("tools"),
+            "furniture", new AtlasSource("furniture")
+    );
+
+    private static class AtlasSource {
+        public AtlasSource(String name) {
+            this.source = name;
+            this.prefix = name + "/";
+        }
+        public String type = "directory";
+        public String source;
+        public String prefix;
     }
 
 }
