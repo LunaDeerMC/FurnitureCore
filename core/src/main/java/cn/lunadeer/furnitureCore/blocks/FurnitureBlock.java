@@ -2,10 +2,7 @@ package cn.lunadeer.furnitureCore.blocks;
 
 import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCore.utils.XLogger;
-import cn.lunadeer.furnitureCoreApi.events.FurnitureBrokenEvent;
-import cn.lunadeer.furnitureCoreApi.events.FurniturePlacedEvent;
-import cn.lunadeer.furnitureCoreApi.events.HangingFurniturePlacedEvent;
-import cn.lunadeer.furnitureCoreApi.events.RotateFurniturePlacedEvent;
+import cn.lunadeer.furnitureCoreApi.events.*;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import cn.lunadeer.furnitureCoreApi.models.Rotation;
 import org.bukkit.Location;
@@ -134,9 +131,18 @@ public class FurnitureBlock {
         if (model.canHanging()) {
             float yaw = itemDisplay.getYaw();
             float pitch = itemDisplay.getPitch();
-            if (blockFace == BlockFace.DOWN) {
+            if (blockFace == BlockFace.UP) {
+                if (model.canRotate()) {
+                    yaw = rotate.getAngle();
+                    pitch = itemDisplay.getPitch();
+                }
+            } else if (blockFace == BlockFace.DOWN) {
                 // todo don't know why pitch can only between +/-90
                 // pitch = 180;
+                if (model.canRotate()) {
+                    yaw = rotate.getAngle();
+                    pitch = itemDisplay.getPitch();
+                }
             } else if (blockFace == BlockFace.NORTH) {
                 pitch = 90;
                 yaw = 180;
@@ -174,6 +180,28 @@ public class FurnitureBlock {
         location.getWorld().getPersistentDataContainer().remove(key);
         location.getWorld().dropItem(location, new FurnitureItemStack(furnitureItemStack, 1));
         return true;
+    }
+
+    public void tryRotate(Player player) {
+        if (itemDisplay == null) {
+            clearBarrierInCase(location);
+            throw new IllegalArgumentException("ItemDisplay is null for location: %s".formatted(location));
+        }
+        if (itemDisplay.getPitch() != 0) {
+            // is hanging so should not rotate
+            return;
+        }
+        if (!furnitureItemStack.getModel().canRotate()) {
+            return;
+        }
+        Rotation current = Rotation.fromYaw(itemDisplay.getYaw());
+        Rotation next = current.next();
+        // call FurnitureBrokenEvent if not cancelled do the following
+        if (!new FurnitureRotatedEvent(player, location, itemDisplay, furnitureItemStack.getModel(), current, next).callEvent()) {
+            XLogger.debug("FurnitureBrokenEvent cancelled");
+            return;
+        }
+        itemDisplay.setRotation(next.getAngle(), itemDisplay.getPitch());
     }
 
     /**

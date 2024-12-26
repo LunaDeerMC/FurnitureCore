@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
@@ -15,8 +16,11 @@ import org.bukkit.inventory.EquipmentSlot;
 
 public class PlaceFurniture implements Listener {
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onPlaceFurniture(HangingPlaceEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
         Block clickedBlock = event.getBlock();
         FurnitureItemStack furnitureItemStack;
         if (event.getItemStack() == null) {
@@ -28,6 +32,7 @@ public class PlaceFurniture implements Listener {
             XLogger.debug("Not a furniture: %s", e.getMessage());
             return;
         }
+        event.setCancelled(true);
         Location location = clickedBlock.getRelative(event.getBlockFace()).getLocation();
         if (location.getBlock().getType().isSolid()) {
             XLogger.debug("Block is solid");
@@ -46,7 +51,6 @@ public class PlaceFurniture implements Listener {
                         Rotation.fromYaw(event.getPlayer().getYaw() + 180)  // +180 to make it face the player
                 );
         if (itemDisplay != null) {
-            event.setCancelled(true);
             event.getItemStack().setAmount(event.getItemStack().getAmount() - 1);
         }
     }

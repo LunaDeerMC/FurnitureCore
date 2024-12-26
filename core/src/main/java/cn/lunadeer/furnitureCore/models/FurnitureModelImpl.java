@@ -88,7 +88,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     private String customName;
     private String modelName;
     private boolean canRotate = true;
-    private boolean canHanging = false; // if can hanging the rotation will be disabled
+    private boolean canHanging = false;
     private boolean ambientocclusion = true;
     private JSONArray elements;
     private JSONArray groups;
