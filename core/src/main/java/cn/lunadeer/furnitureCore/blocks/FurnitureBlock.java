@@ -132,8 +132,26 @@ public class FurnitureBlock {
         itemDisplay.setGravity(false);
         itemDisplay.setInvulnerable(true);
         if (model.canHanging()) {
-            // todo calculate the yaw and pitch
-        } else if (model.canRotate()) {
+            float yaw = itemDisplay.getYaw();
+            float pitch = itemDisplay.getPitch();
+            if (blockFace == BlockFace.DOWN) {
+                // todo don't know why pitch can only between +/-90
+                // pitch = 180;
+            } else if (blockFace == BlockFace.NORTH) {
+                pitch = 90;
+                yaw = 180;
+            } else if (blockFace == BlockFace.EAST) {
+                pitch = 90;
+                yaw = 270;
+            } else if (blockFace == BlockFace.SOUTH) {
+                pitch = 90;
+            } else if (blockFace == BlockFace.WEST) {
+                pitch = 90;
+                yaw = 90;
+            }
+            XLogger.debug("yaw: %f, pitch: %f, block_face: %s", yaw, pitch, blockFace);
+            itemDisplay.setRotation(yaw, pitch);
+        } else if (model.canRotate() && !model.canHanging()) {
             itemDisplay.setRotation(rotate.getAngle(), itemDisplay.getPitch());
         }
         location.getWorld().getPersistentDataContainer().set(key, PersistentDataType.STRING, itemDisplay.getUniqueId().toString());
