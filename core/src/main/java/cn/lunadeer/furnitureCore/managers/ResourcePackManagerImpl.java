@@ -21,10 +21,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static cn.lunadeer.furnitureCore.utils.Common.DeleteFolderRecursively;
 
@@ -324,10 +321,9 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         return hexString.toString();
     }
 
-    private final Map<String, AtlasSource> atlasSources = Map.of(
-            "tools", new AtlasSource("tools"),
-            "furniture", new AtlasSource("furniture")
-    );
+    private final Map<String, AtlasSource> atlasSources = new HashMap<>(Map.of(
+            "tools", new AtlasSource("tools")
+    ));
 
     private static class AtlasSource {
         public AtlasSource(String name) {
