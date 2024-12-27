@@ -28,20 +28,17 @@ public class FurnitureModelImpl implements FurnitureModel {
         File unzipCache = new File(FurnitureCore.getCacheDir(), "model_" + modelFile.getName().replace(".zip", ""));
         try {
             FurnitureModelImpl furnitureModel = new FurnitureModelImpl();
-
+            furnitureModel.modelName = modelFile.getName().replace(".zip", "");
             // 1. unzip the file to cache directory
             ZipUtils.decompressFromZip(modelFile, unzipCache);
-            File[] jsonFiles = unzipCache.listFiles((dir, name) -> name.endsWith(".json") && !name.equals("recipes.json"));
+            File jsonFile = new File(unzipCache, furnitureModel.modelName + ".json");
 
             // 2. valid the json file exists then parse it to modelJson
-            if (jsonFiles == null || jsonFiles.length == 0) {
+            if (!jsonFile.exists()) {
                 throw new Exception("Model json file not found.");
             }
-            if (jsonFiles.length > 1) {
-                XLogger.warn("Multiple json files found in model zip file %s, only the first one will be used.".formatted(modelFile.getAbsolutePath()));
-            }
-            furnitureModel.modelName = jsonFiles[0].getName().replace(".json", "");
-            JSONObject json = JsonUtils.loadFromFile(jsonFiles[0]);
+
+            JSONObject json = JsonUtils.loadFromFile(jsonFile);
             furnitureModel.ambientocclusion = json.containsKey("ambientocclusion") ? json.getBoolean("ambientocclusion") : true;
             furnitureModel.display = json.containsKey("display") ? json.getJSONObject("display") : null;
             furnitureModel.gui_light = json.containsKey("gui_light") ? json.getString("gui_light") : "side";
