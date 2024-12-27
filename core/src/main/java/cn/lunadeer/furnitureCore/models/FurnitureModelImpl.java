@@ -25,10 +25,15 @@ import static cn.lunadeer.furnitureCore.utils.Common.DeleteFolderRecursively;
 public class FurnitureModelImpl implements FurnitureModel {
 
     public static FurnitureModelImpl loadModel(File modelFile) throws Exception {
+        return loadModel(modelFile, null);
+    }
+
+    public static FurnitureModelImpl loadModel(File modelFile, String prefixPath) throws Exception {
         File unzipCache = new File(FurnitureCore.getCacheDir(), "model_" + modelFile.getName().replace(".zip", ""));
         try {
             FurnitureModelImpl furnitureModel = new FurnitureModelImpl();
             furnitureModel.modelName = modelFile.getName().replace(".zip", "");
+            furnitureModel.setPrefixPath(prefixPath == null ? "furniture" : prefixPath);
             // 1. unzip the file to cache directory
             ZipUtils.decompressFromZip(modelFile, unzipCache);
             File jsonFile = new File(unzipCache, furnitureModel.modelName + ".json");
@@ -139,7 +144,7 @@ public class FurnitureModelImpl implements FurnitureModel {
      *
      * @param path the path of the texture
      */
-    public void setPrefixPath(String path) {
+    private void setPrefixPath(String path) {
         if (savedAndEffective) {
             throw new IllegalStateException("Model already effective, cannot change prefix path.");
         }

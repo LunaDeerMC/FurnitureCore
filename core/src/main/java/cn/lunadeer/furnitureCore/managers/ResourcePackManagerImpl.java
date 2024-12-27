@@ -62,29 +62,22 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
     );
 
     @Override
-    public void loadModelsFromDisk() throws Exception {
+    public void loadModelsFromDisk() {
         // 1. list all zip files under models directory
-        List<String> modelDirZipFilenames = new ArrayList<>();
-        File[] zipFiles = modelDir.listFiles((dir, name) -> name.endsWith(".zip"));
-        if (zipFiles == null) {
-            throw new Exception("Failed to list files under dir %s".formatted(modelDir.getAbsolutePath()));
-        }
-        Arrays.stream(zipFiles).forEach(file -> modelDirZipFilenames.add(file.getName()));
+        Map<File, String> modelDirZipFiles = listModelFileAndPrefix(modelDir, modelDir);
 
+        // 2. for each zip file
         List<String> failed = new ArrayList<>();
-        // 3. for each zip file
-        for (String zipFilename : modelDirZipFilenames) {
-            File zipFile = new File(modelDir, zipFilename);
-
-            // - 2. try load model then assign & set index
+        for (File zipFile : modelDirZipFiles.keySet()) {
+            // - try load model then assign & set index
             try {
-                FurnitureModelImpl furnitureModel = FurnitureModelImpl.loadModel(zipFile);
-                // - 3. add the model to a list for later use
+                FurnitureModelImpl furnitureModel = FurnitureModelImpl.loadModel(zipFile, modelDirZipFiles.get(zipFile));
+                // - add the model to a list for later use
                 modelLoad.add(furnitureModel);
             } catch (Exception e) {
                 XLogger.err("Failed to load model: %s", zipFile.getAbsoluteFile().toString());
                 XLogger.err("Reason: %s", e.getMessage());
-                failed.add(zipFilename);
+                failed.add(zipFile.getName());
             }
         }
         XLogger.info("Loaded %d models.", modelLoad.size());
@@ -331,9 +324,34 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
             this.source = name;
             this.prefix = name + "/";
         }
+
         public String type = "directory";
         public String source;
         public String prefix;
+    }
+
+
+    private static Map<File, String> listModelFileAndPrefix(File modelDir, File dir) {
+        Map<File, String> result = new HashMap<>();
+        File[] files = dir.listFiles();
+        XLogger.debug("%s files: %s", dir.getAbsolutePath(), Arrays.toString(files));
+        if (files == null) {
+            return new HashMap<>();
+        }
+        String prefix;
+        if (modelDir.getAbsolutePath().equals(dir.getAbsolutePath())) {
+            prefix = null;
+        } else {
+            prefix = dir.getAbsolutePath().substring(modelDir.getAbsolutePath().length() + 1);
+        }
+        for (File file : files) {
+            if (file.isDirectory()) {
+                result.putAll(listModelFileAndPrefix(modelDir, file));
+            } else if (file.getName().endsWith(".zip")) {
+                result.put(file, prefix);
+            }
+        }
+        return result;
     }
 
 }
