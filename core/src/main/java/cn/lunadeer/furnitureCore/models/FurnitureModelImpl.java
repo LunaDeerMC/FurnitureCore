@@ -2,11 +2,11 @@ package cn.lunadeer.furnitureCore.models;
 
 import cn.lunadeer.furnitureCore.Configuration;
 import cn.lunadeer.furnitureCore.FurnitureCore;
-import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCore.utils.ImageUtils;
 import cn.lunadeer.furnitureCore.utils.JsonUtils;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
+import cn.lunadeer.furnitureCoreApi.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;

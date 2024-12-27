@@ -1,8 +1,8 @@
 package cn.lunadeer.furnitureCore.events;
 
 import cn.lunadeer.furnitureCore.blocks.FurnitureBlock;
-import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCore.utils.XLogger;
+import cn.lunadeer.furnitureCoreApi.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCoreApi.models.Rotation;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
