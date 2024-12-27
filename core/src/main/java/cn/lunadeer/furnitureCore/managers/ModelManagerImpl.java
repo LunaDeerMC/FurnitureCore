@@ -53,18 +53,18 @@ public class ModelManagerImpl extends ModelManager {
             throw new IllegalArgumentException("Model is not effect, cannot be registered.");
         }
         modelReady.put(model.getItemModelKey(), model);
-        model.registerRecipe();
+        model.registerInternalRecipe();
     }
 
     @Override
     public void unregisterModel(NamespacedKey key) {
-        modelReady.get(key).unregisterRecipe();
+        modelReady.get(key).unregisterInternalRecipe();
         modelReady.remove(key);
     }
 
     @Override
     public void unregisterAllModels() {
-        modelReady.forEach((key, model) -> model.unregisterRecipe());
+        modelReady.forEach((key, model) -> model.unregisterInternalRecipe());
         modelReady.clear();
     }
 

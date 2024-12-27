@@ -1,5 +1,6 @@
 package cn.lunadeer.furnitureCore.models;
 
+import cn.lunadeer.furnitureCore.Configuration;
 import cn.lunadeer.furnitureCore.FurnitureCore;
 import cn.lunadeer.furnitureCore.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCore.utils.ImageUtils;
@@ -30,7 +31,7 @@ public class FurnitureModelImpl implements FurnitureModel {
 
             // 1. unzip the file to cache directory
             ZipUtils.decompressFromZip(modelFile, unzipCache);
-            File[] jsonFiles = unzipCache.listFiles((dir, name) -> name.endsWith(".json"));
+            File[] jsonFiles = unzipCache.listFiles((dir, name) -> name.endsWith(".json") && !name.equals("recipes.json"));
 
             // 2. valid the json file exists then parse it to modelJson
             if (jsonFiles == null || jsonFiles.length == 0) {
@@ -62,6 +63,10 @@ public class FurnitureModelImpl implements FurnitureModel {
             // 4. valid the texture referenced in json file exists then load it to textures
             for (String key : json.getJSONObject("textures").keySet()) {
                 String textureName = json.getJSONObject("textures").getString(key);
+                if (textureName.contains("minecraft:")) {
+                    // skip minecraft textures (e.g. minecraft:block/stone)
+                    continue;
+                }
                 File textureFile = new File(unzipCache, textureName + ".png");
                 if (!textureFile.exists()) {
                     throw new Exception("Texture file not found: %s".formatted(textureFile.toString()));
@@ -73,7 +78,11 @@ public class FurnitureModelImpl implements FurnitureModel {
                 furnitureModel.textures.put(key, texture);
             }
             // 5. load recipes (cache this for save stage to parse)
-            furnitureModel.recipesJson = json.getJSONArray("recipes");
+            File recipeFile = new File(unzipCache, "recipes.json");
+            if (recipeFile.exists()) {
+                JSONObject recipeJson = JsonUtils.loadFromFile(recipeFile);
+                furnitureModel.recipesJson = recipeJson.getJSONArray("recipes");
+            }
 
             return furnitureModel;
         } finally {
@@ -95,8 +104,8 @@ public class FurnitureModelImpl implements FurnitureModel {
     private JSONObject display;
     private String gui_light = "side";
     private final Map<String, BufferedImage> textures = new HashMap<>();
-    private JSONArray recipesJson;
-    private final Map<NamespacedKey, CraftingRecipe> recipes = new HashMap<>();
+    private JSONArray recipesJson = new JSONArray();
+    private final Map<NamespacedKey, CraftingRecipe> internalRecipes = new HashMap<>();
     private boolean savedAndEffective = false;
 
     @Override
@@ -266,43 +275,44 @@ public class FurnitureModelImpl implements FurnitureModel {
         itemModelKey = new NamespacedKey(namespace, getCallableNameNoNamespace());
 
         // parse recipes
-        if (recipesJson != null) {
-            for (int i = 0; i < recipesJson.size(); i++) {
-                try {
-                    NamespacedKey pdcKey = new NamespacedKey(FurnitureCore.getNamespace(), "furniture_" + this.getModelName() + "_recipe_" + i);
-                    JSONObject recipe = recipesJson.getJSONObject(i);
-                    String type = Objects.requireNonNullElse(recipe.getString("type"), "shapeless");
-                    if (type.equals("shapeless")) {
-                        recipes.put(pdcKey, getShapelessRecipe(i, recipe, pdcKey, this));
-                    } else if (type.equals("shaped")) {
-                        recipes.put(pdcKey, getShapedRecipe(i, recipe, pdcKey, this));
-                    } else {
-                        throw new Exception("Unknown recipe type: %s".formatted(type));
-                    }
-                } catch (Exception e) {
-                    XLogger.err("Model %s recipe %d failed to load: %s".formatted(this.getCallableNameWithNamespace(), i, e.getMessage()));
+        for (int i = 0; i < recipesJson.size(); i++) {
+            try {
+                NamespacedKey pdcKey = new NamespacedKey(FurnitureCore.getNamespace(), "furniture_" + this.getModelName() + "_recipe_" + i);
+                JSONObject recipe = recipesJson.getJSONObject(i);
+                String type = Objects.requireNonNullElse(recipe.getString("type"), "shapeless");
+                if (type.equals("shapeless")) {
+                    internalRecipes.put(pdcKey, getShapelessRecipe(i, recipe, pdcKey, this));
+                } else if (type.equals("shaped")) {
+                    internalRecipes.put(pdcKey, getShapedRecipe(i, recipe, pdcKey, this));
+                } else {
+                    throw new Exception("Unknown recipe type: %s".formatted(type));
                 }
+            } catch (Exception e) {
+                XLogger.err("Model %s recipe %d failed to load: %s".formatted(this.getCallableNameWithNamespace(), i, e.getMessage()));
             }
         }
+
     }
 
     @Override
-    public void registerRecipe() {
-        for (CraftingRecipe recipe : recipes.values()) {
+    public void registerInternalRecipe() {
+        if (!Configuration.modelInternalRecipes) return;
+        for (CraftingRecipe recipe : internalRecipes.values()) {
             FurnitureCore.getInstance().getServer().addRecipe(recipe);
         }
     }
 
     @Override
-    public void unregisterRecipe() {
-        for (CraftingRecipe recipe : recipes.values()) {
+    public void unregisterInternalRecipe() {
+        if (!Configuration.modelInternalRecipes) return;
+        for (CraftingRecipe recipe : internalRecipes.values()) {
             FurnitureCore.getInstance().getServer().removeRecipe(recipe.getKey());
         }
     }
 
     @Override
-    public Map<NamespacedKey, CraftingRecipe> getRecipes() {
-        return recipes;
+    public Map<NamespacedKey, CraftingRecipe> getInternalRecipes() {
+        return internalRecipes;
     }
 
     @Override

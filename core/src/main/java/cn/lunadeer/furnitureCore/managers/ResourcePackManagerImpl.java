@@ -133,7 +133,7 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
                 furnitureModel.setNamespace(FurnitureCore.getNamespace());
                 furnitureModel.save(getAssetDir());     // <<<<<<<<<<<<<<   from now the model is effectively
                 ModelManager.getInstance().registerModel(furnitureModel);
-                recipeCount += furnitureModel.getRecipes().size();
+                recipeCount += furnitureModel.getInternalRecipes().size();
             } catch (Exception e) {
                 XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
             }
