@@ -322,7 +322,8 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
     }
 
     private final Map<String, AtlasSource> atlasSources = new HashMap<>(Map.of(
-            "tools", new AtlasSource("tools")
+            "tools", new AtlasSource("tools"),
+            "furniture", new AtlasSource("furniture")
     ));
 
     private static class AtlasSource {
