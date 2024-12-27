@@ -4,6 +4,7 @@ import cn.lunadeer.furnitureCore.FurnitureCore;
 import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import org.bukkit.NamespacedKey;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,7 +26,7 @@ public class ModelManagerImpl extends ModelManager {
     }
 
     @Override
-    public FurnitureModel getModel(NamespacedKey key) {
+    public FurnitureModel getModel(@NotNull NamespacedKey key) {
         return modelReady.get(key);
     }
 
@@ -48,7 +49,7 @@ public class ModelManagerImpl extends ModelManager {
     }
 
     @Override
-    public void registerModel(FurnitureModel model) throws IllegalArgumentException {
+    public void registerModel(@NotNull FurnitureModel model) throws IllegalArgumentException {
         if (!model.isEffect()) {
             throw new IllegalArgumentException("Model is not effect, cannot be registered.");
         }
@@ -57,7 +58,7 @@ public class ModelManagerImpl extends ModelManager {
     }
 
     @Override
-    public void unregisterModel(NamespacedKey key) {
+    public void unregisterModel(@NotNull NamespacedKey key) {
         modelReady.get(key).unregisterInternalRecipe();
         modelReady.remove(key);
     }
