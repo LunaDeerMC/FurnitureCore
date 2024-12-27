@@ -67,6 +67,7 @@ public class FurnitureBlock {
         try {
             furnitureItemStack = new FurnitureItemStack(itemDisplay.getItemStack());
         } catch (IllegalArgumentException e) {
+            itemDisplay.remove();
             clearBarrierInCase(location);
             throw new IllegalArgumentException("Not a furniture: %s".formatted(e.getMessage()));
         }
