@@ -29,37 +29,47 @@ public class FurnitureModelImpl implements FurnitureModel {
     }
 
     public static FurnitureModelImpl loadModel(File modelFile, String prefixPath) throws Exception {
-        File unzipCache = new File(FurnitureCore.getCacheDir(), "model_" + modelFile.getName().replace(".zip", ""));
+        // 0. validate name & path
+        String modelName = modelFile.getName().replace(".zip", "");
+        if (!isValidName(modelName)) {
+            throw new Exception("Model name contains invalid characters, must be [a-z0-9._-]: %s".formatted(modelName));
+        }
+        String prefix = prefixPath == null ? "furniture" : prefixPath;
+        if (!isValidName(prefix.replace("/", ""))) {
+            throw new Exception("Prefix path contains invalid characters, must be [a-z0-9._-]: %s".formatted(prefix));
+        }
+        File unzipCache = new File(FurnitureCore.getCacheDir(), "model_" + modelName);
         try {
             FurnitureModelImpl furnitureModel = new FurnitureModelImpl();
-            furnitureModel.modelName = modelFile.getName().replace(".zip", "");
-            furnitureModel.setPrefixPath(prefixPath == null ? "furniture" : prefixPath);
+            furnitureModel.modelName = modelName;
+            furnitureModel.setPrefixPath(prefix);
+
             // 1. unzip the file to cache directory
             ZipUtils.decompressFromZip(modelFile, unzipCache);
-            File jsonFile = new File(unzipCache, furnitureModel.modelName + ".json");
 
             // 2. valid the json file exists then parse it to modelJson
+            File jsonFile = new File(unzipCache, "model.json");
             if (!jsonFile.exists()) {
                 throw new Exception("Model json file not found.");
             }
-
             JSONObject json = JsonUtils.loadFromFile(jsonFile);
             furnitureModel.ambientocclusion = json.containsKey("ambientocclusion") ? json.getBoolean("ambientocclusion") : true;
             furnitureModel.display = json.containsKey("display") ? json.getJSONObject("display") : null;
             furnitureModel.gui_light = json.containsKey("gui_light") ? json.getString("gui_light") : "side";
             furnitureModel.groups = json.getJSONArray("groups");
             furnitureModel.elements = json.getJSONArray("elements");
-            furnitureModel.canRotate = json.containsKey("can_rotate") ? json.getBoolean("can_rotate") : true;
-            furnitureModel.canHanging = json.containsKey("can_hanging") ? json.getBoolean("can_hanging") : false;
             if (furnitureModel.elements == null) {
                 throw new Exception("Elements not found in json model file.");
             }
 
-            // 3. check if custom_name exists in json file then set it to model
-            if (json.containsKey("custom_name")) {
-                furnitureModel.customName = json.getString("custom_name");
-            } else {
-                furnitureModel.customName = furnitureModel.modelName;
+            // 3. load properties.json exists, then parse it to model properties
+            File propertiesFile = new File(unzipCache, "properties.json");
+            if (propertiesFile.exists()) {
+                JSONObject propertiesJson = JsonUtils.loadFromFile(propertiesFile);
+                furnitureModel.customName = propertiesJson.containsKey("custom_name") ? propertiesJson.getString("custom_name") : furnitureModel.modelName;
+                furnitureModel.canRotate = propertiesJson.containsKey("can_rotate") ? propertiesJson.getBoolean("can_rotate") : true;
+                furnitureModel.canHanging = propertiesJson.containsKey("can_hanging") ? propertiesJson.getBoolean("can_hanging") : false;
+                // todo parse function
             }
 
             // 4. valid the texture referenced in json file exists then load it to textures
@@ -79,6 +89,7 @@ public class FurnitureModelImpl implements FurnitureModel {
                 }
                 furnitureModel.textures.put(key, texture);
             }
+
             // 5. load recipes (cache this for save stage to parse)
             File recipeFile = new File(unzipCache, "recipes.json");
             if (recipeFile.exists()) {
@@ -96,7 +107,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     }
 
     private NamespacedKey itemModelKey;
-    private String customName;
+    private String customName = null;
     private String modelName;
     private boolean canRotate = true;
     private boolean canHanging = false;
@@ -125,7 +136,7 @@ public class FurnitureModelImpl implements FurnitureModel {
 
     @Override
     public String getCustomName() {
-        return customName;
+        return customName == null ? modelName : customName;
     }
 
     @Override
@@ -389,6 +400,24 @@ public class FurnitureModelImpl implements FurnitureModel {
             shapelessRecipe.addIngredient(Material.valueOf(ingredient.toUpperCase()));
         }
         return shapelessRecipe;
+    }
+
+    private static boolean isValidNameChar(char c) {
+        return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-';
+    }
+
+    private static boolean isValidName(String namespace) {
+        int len = namespace.length();
+        if (len == 0) {
+            return false;
+        }
+        for (int i = 0; i < len; i++) {
+            if (!isValidNameChar(namespace.charAt(i))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }
