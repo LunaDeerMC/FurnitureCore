@@ -7,6 +7,7 @@ import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.bStatsMetrics;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationManager;
+import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
 import cn.lunadeer.furnitureCoreApi.items.ScrewdriverItemStack;
 import cn.lunadeer.furnitureCoreApi.managers.ResourcePackManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,19 +16,35 @@ import java.io.File;
 
 public final class FurnitureCore extends JavaPlugin {
 
+    public static class FurnitureCoreText extends ConfigurationPart {
+        public String failToLoadConfig = "Failed to load configuration file: %s";
+        public String failToLoadLanguage = "Failed to load language file: %s, using default language.";
+        public String loading = "FurnitureCore is loading...";
+        public String loaded = "FurnitureCore is loaded successfully!";
+    }
+
     @Override
     public void onEnable() {
         instance = this;
         new Notification(this);
         new XLogger(this);
+        // Load configuration file
         try {
             File configFile = new File(FurnitureCore.getInstance().getDataFolder(), "config.yml");
             ConfigurationManager.load(Configuration.class, configFile, "version");
         } catch (Exception e) {
-            XLogger.err("Failed to load configuration file: %s", e.getMessage());
+            XLogger.err(Language.furnitureCoreText.failToLoadConfig, e.getMessage());
         }
+        // Load language files
+        try {
+            File languageFile = new File(FurnitureCore.getInstance().getDataFolder(), "languages/" + Configuration.language + ".yml");
+            ConfigurationManager.load(Language.class, languageFile, "version");
+        } catch (Exception e) {
+            XLogger.err(Language.furnitureCoreText.failToLoadLanguage, e.getMessage());
+        }
+
         XLogger.setDebug(Configuration.debug);
-        XLogger.info("FurnitureCore is loading...");
+        XLogger.info(Language.furnitureCoreText.loading);
 
         new bStatsMetrics(this, 24192);
 
@@ -65,7 +82,7 @@ public final class FurnitureCore extends JavaPlugin {
             XLogger.err("%s", e.getMessage());
         }
 
-        XLogger.info("FurnitureCore is loaded!");
+        XLogger.info(Language.furnitureCoreText.loaded);
         XLogger.debug("Debug mode is enabled.");
     }
 

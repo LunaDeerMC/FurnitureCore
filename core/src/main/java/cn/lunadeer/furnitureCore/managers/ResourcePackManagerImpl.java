@@ -2,10 +2,12 @@ package cn.lunadeer.furnitureCore.managers;
 
 import cn.lunadeer.furnitureCore.Configuration;
 import cn.lunadeer.furnitureCore.FurnitureCore;
+import cn.lunadeer.furnitureCore.Language;
 import cn.lunadeer.furnitureCore.models.FurnitureModelImpl;
 import cn.lunadeer.furnitureCore.utils.JsonUtils;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
+import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
 import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
 import cn.lunadeer.furnitureCoreApi.managers.ResourcePackManager;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
@@ -30,6 +32,37 @@ import static cn.lunadeer.furnitureCore.utils.Common.DeleteFolderRecursively;
  */
 public class ResourcePackManagerImpl extends ResourcePackManager {
 
+    public static class ResourcePackManagerText extends ConfigurationPart {
+        public String failToCreateModelsDir = "Failed to create models directory.";
+        // loadModelsFromDisk()
+        public String failToLoadModel = "Failed to load model: %s";
+        public String reason = "Reason: %s";
+        public String loadModelsCount = "Loaded %d models.";
+        public String listFailedLoadModels = "Failed to load %d models: %s";
+        // generateResourcePack()
+        public String failToDeleteCacheDir = "Failed to delete cache directory: %s";
+        public String failToMovePackDir = "Failed to move pack directory to cache directory.";
+        public String failToRenamePackMcmeta = "Failed to rename pack.mcmeta.json to pack.mcmeta.";
+        public String failToGenerateModelFile = "Failed to generate model file %s: %s";
+        public String registeredRecipesCount = "Registered %d recipes.";
+        public String resourcePackModelsCount = "Resource pack will generate with %s models.";
+        public String failToDeleteExistingPack = "Failed to delete existing resource pack zip file.";
+        public String failToGeneratePackZip = "Failed to generate resource pack zip file.";
+        public String packGenerateSuccess = "Resource pack generated successfully.";
+        public String resourcePackSize = "Resource pack size: %s";
+        public String resourcePackHash = "Resource pack hash: %s";
+        public String failToDeletePackCache = "Failed to delete cache/resource_pack directory.";
+        // startServer()
+        public String packServerStartSuccess = "Resource pack is hosted at %s";
+        public String packServerStartFail = "Failed to start http server: %s";
+        // applyToPlayer()
+        public String packNotReady = "Resource pack is not ready.";
+        public String messageSentToClient = "This is a resource pack update from Server FurnitureCore.";
+        // GetFileHash()
+        public String fileNotFound = "File not found: %s";
+        public String notFile = "Not a file: %s";
+    }
+
     private final FurnitureCore plugin;
     private final File modelDir;
 
@@ -45,20 +78,22 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         this.modelDir = new File(plugin.getDataFolder(), "models");
         if (!this.modelDir.exists()) {
             if (!this.modelDir.mkdirs()) {
-                XLogger.err("Failed to create models directory.");
+                XLogger.err(Language.resourcePackManagerText.failToCreateModelsDir);
             }
         }
     }
 
-    // add more files if  needed
+    // pre-defined resource pack files in jar resources, these files will be copied to pack directory
     private final List<String> preDefinedResourcePackFiles = List.of(
-            "pack.mcmeta.json",
-            "pack.png",
+            "pack/pack.mcmeta.json",
+            "pack/pack.png",
 
-            "assets/furniture_core/items/tools/screwdriver.json",
-            "assets/furniture_core/models/tools/screwdriver.json",
-            "assets/furniture_core/textures/tools/screwdriver_handle.png",
-            "assets/furniture_core/textures/tools/screwdriver_head.png"
+            "pack/assets/furniture_core/items/tools/screwdriver.json",
+            "pack/assets/furniture_core/models/tools/screwdriver.json",
+            "pack/assets/furniture_core/textures/tools/screwdriver_handle.png",
+            "pack/assets/furniture_core/textures/tools/screwdriver_head.png"
+
+            // add more files if  needed ...
     );
 
     @Override
@@ -75,14 +110,14 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
                 // - add the model to a list for later use
                 modelLoad.add(furnitureModel);
             } catch (Exception e) {
-                XLogger.err("Failed to load model: %s", zipFile.getAbsoluteFile().toString());
-                XLogger.err("Reason: %s", e.getMessage());
+                XLogger.err(Language.resourcePackManagerText.failToLoadModel, zipFile.getAbsoluteFile().toString());
+                XLogger.err(Language.resourcePackManagerText.reason, e.getMessage());
                 failed.add(zipFile.getName());
             }
         }
-        XLogger.info("Loaded %d models.", modelLoad.size());
+        XLogger.info(Language.resourcePackManagerText.loadModelsCount, modelLoad.size());
         if (!failed.isEmpty()) {
-            XLogger.err("Failed to load %d models: %s", failed.size(), String.join(", ", failed));
+            XLogger.err(Language.resourcePackManagerText.listFailedLoadModels, failed.size(), String.join(", ", failed));
         }
     }
 
@@ -93,7 +128,7 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         ModelManager.getInstance().unregisterAllModels();
         // 1. copy pre-defined files to pack directory
         for (String filename : preDefinedResourcePackFiles) {
-            plugin.saveResource("pack/" + filename, true);
+            plugin.saveResource(filename, true);
         }
 
         // 2. move pack directory to cache/resource_pack
@@ -101,19 +136,19 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         if (getResourcePackCacheDir().exists()) {
             if (!DeleteFolderRecursively(getResourcePackCacheDir())) {
                 resourcePackStatus = ResourcePackStatus.ERROR;
-                throw new Exception("Failed to delete cache directory: %s".formatted(getResourcePackCacheDir().getAbsolutePath()));
+                throw new Exception(Language.resourcePackManagerText.failToDeleteCacheDir.formatted(getResourcePackCacheDir().getAbsolutePath()));
             }
         }
         if (!resourcePackDir.renameTo(getResourcePackCacheDir())) {
             resourcePackStatus = ResourcePackStatus.ERROR;
-            throw new Exception("Failed to move pack directory to cache directory.");
+            throw new Exception(Language.resourcePackManagerText.failToMovePackDir);
         }
 
         // 3. rename cache/resource_pack/pack.mcmeta.json to cache/resource_pack/pack.mcmeta
         File packMcmeta = new File(getResourcePackCacheDir(), "pack.mcmeta.json");
         if (!packMcmeta.renameTo(new File(getResourcePackCacheDir(), "pack.mcmeta"))) {
             resourcePackStatus = ResourcePackStatus.ERROR;
-            throw new Exception("Failed to rename pack.mcmeta.json to pack.mcmeta");
+            throw new Exception(Language.resourcePackManagerText.failToRenamePackMcmeta);
         }
 
         // 4. save all models (get from ModelManager)
@@ -125,11 +160,11 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
                 ModelManager.getInstance().registerModel(furnitureModel);
                 recipeCount += furnitureModel.getInternalRecipes().size();
             } catch (Exception e) {
-                XLogger.err("Failed to generate model file %s: %s", furnitureModel.getModelName(), e.getMessage());
+                XLogger.err(Language.resourcePackManagerText.failToGenerateModelFile, furnitureModel.getModelName(), e.getMessage());
             }
         }
-        XLogger.info("Registered %d recipes.", recipeCount);
-        XLogger.info("Resource pack will generate with %s models.", ModelManager.getInstance().getModels().size());
+        XLogger.info(Language.resourcePackManagerText.registeredRecipesCount, recipeCount);
+        XLogger.info(Language.resourcePackManagerText.resourcePackModelsCount, ModelManager.getInstance().getModels().size());
 
         // 5. generate atlas files
         File atlasDir = new File(getAssetDir(), "minecraft/atlases");
@@ -155,25 +190,25 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         if (getResourcePackZip().exists()) {
             if (!getResourcePackZip().delete()) {
                 resourcePackStatus = ResourcePackStatus.ERROR;
-                throw new Exception("Failed to delete existing resource pack zip file.");
+                throw new Exception(Language.resourcePackManagerText.failToDeleteExistingPack);
             }
         }
         ZipUtils.compressFolderContentToZip(getResourcePackCacheDir(), getResourcePackZip());
         if (!getResourcePackZip().exists()) {
             resourcePackStatus = ResourcePackStatus.ERROR;
-            throw new Exception("Failed to generate resource pack zip file.");
+            throw new Exception(Language.resourcePackManagerText.failToGeneratePackZip);
         }
         resourcePackHash = GetFileHash(getResourcePackZip());
 
-        // Done
-        XLogger.info("Resource pack generated successfully.");
-        XLogger.info("Resource pack size: %s", GetResourcePackZipSize());
-        XLogger.info("Resource pack hash: %s", BytesToHex(resourcePackHash));
+        // Done output resource pack info
+        XLogger.info(Language.resourcePackManagerText.packGenerateSuccess);
+        XLogger.info(Language.resourcePackManagerText.resourcePackSize, GetResourcePackZipSize());
+        XLogger.info(Language.resourcePackManagerText.resourcePackHash, BytesToHex(resourcePackHash));
         resourcePackStatus = ResourcePackStatus.GENERATED;
 
         if (!DeleteFolderRecursively(getResourcePackCacheDir())) {
             resourcePackStatus = ResourcePackStatus.ERROR;
-            throw new Exception("Failed to delete cache/resource_pack directory.");
+            throw new Exception(Language.resourcePackManagerText.failToDeletePackCache);
         }
     }
 
@@ -184,21 +219,26 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         if (server != null) {
             server.stop(0);
         }
-        server = HttpServer.create(address, 0);
-        server.createContext("/" + getResourcePackZip().getName(), exchange -> {
-            exchange.sendResponseHeaders(200, getResourcePackZip().length());
-            try (FileInputStream fis = new FileInputStream(getResourcePackZip())) {
-                byte[] buffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = fis.read(buffer)) != -1) {
-                    exchange.getResponseBody().write(buffer, 0, bytesRead);
+        try {
+            server = HttpServer.create(address, 0);
+            server.createContext("/" + getResourcePackZip().getName(), exchange -> {
+                exchange.sendResponseHeaders(200, getResourcePackZip().length());
+                try (FileInputStream fis = new FileInputStream(getResourcePackZip())) {
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = fis.read(buffer)) != -1) {
+                        exchange.getResponseBody().write(buffer, 0, bytesRead);
+                    }
                 }
-            }
-            exchange.close();
-        });
-        server.start();
-        XLogger.info("Resource pack is hosted at %s", getResourcePackUrl());
-        resourcePackStatus = ResourcePackStatus.READY;
+                exchange.close();
+            });
+            server.start();
+            resourcePackStatus = ResourcePackStatus.READY;
+            XLogger.info(Language.resourcePackManagerText.packServerStartSuccess, getResourcePackUrl());
+        } catch (IOException e) {
+            resourcePackStatus = ResourcePackStatus.ERROR;
+            throw new Exception(Language.resourcePackManagerText.packServerStartFail.formatted(e.getMessage()));
+        }
     }
 
     @Override
@@ -219,12 +259,12 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
     @Override
     public void applyToPlayer(Player player) throws IllegalStateException {
         if (resourcePackStatus != ResourcePackStatus.READY) {
-            throw new IllegalStateException("Resource pack is not ready.");
+            throw new IllegalStateException(Language.resourcePackManagerText.packNotReady);
         }
         XLogger.debug("Applying resource pack to %s", player.getName());
         player.setResourcePack(getResourcePackUrl(),
                 resourcePackHash,
-                Component.text("This is a resource pack update from Server FurnitureCore."),
+                Component.text(Language.resourcePackManagerText.messageSentToClient),
                 Configuration.resourcePackSettings.required);
     }
 
@@ -280,10 +320,10 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
      */
     public static byte[] GetFileHash(File file) throws IOException, NoSuchAlgorithmException {
         if (!file.exists()) {
-            throw new IOException("File not found: %s".formatted(file.getAbsolutePath()));
+            throw new IOException(Language.resourcePackManagerText.fileNotFound.formatted(file.getAbsolutePath()));
         }
         if (!file.isFile()) {
-            throw new IOException("Not a file: %s".formatted(file.getAbsolutePath()));
+            throw new IOException(Language.resourcePackManagerText.notFile.formatted(file.getAbsolutePath()));
         }
         MessageDigest digest = MessageDigest.getInstance("SHA-1");
         try (FileInputStream fis = new FileInputStream(file)) {

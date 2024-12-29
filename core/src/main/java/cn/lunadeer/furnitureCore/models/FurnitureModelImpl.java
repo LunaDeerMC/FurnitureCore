@@ -2,10 +2,12 @@ package cn.lunadeer.furnitureCore.models;
 
 import cn.lunadeer.furnitureCore.Configuration;
 import cn.lunadeer.furnitureCore.FurnitureCore;
+import cn.lunadeer.furnitureCore.Language;
 import cn.lunadeer.furnitureCore.utils.ImageUtils;
 import cn.lunadeer.furnitureCore.utils.JsonUtils;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
+import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
 import cn.lunadeer.furnitureCoreApi.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import com.alibaba.fastjson.JSONArray;
@@ -24,6 +26,25 @@ import static cn.lunadeer.furnitureCore.utils.Common.DeleteFolderRecursively;
 
 public class FurnitureModelImpl implements FurnitureModel {
 
+    public static class  FurnitureModelText extends ConfigurationPart {
+        // loadModel()
+        public String modelNameInvalid = "Model name contains invalid characters, must be [a-z0-9._-]: %s";
+        public String prefixPathInvalid = "Prefix path contains invalid characters, must be [a-z0-9._-]: %s";
+        public String modelJsonNotFound = "Model file model.json not found.";
+        public String elementNotFound = "Elements not found in json model file.";
+        public String textureNotFound = "Texture file not found: %s";
+        public String failToLoadTexture = "Failed to create texture save path: %s";
+
+        // save()
+        public String failToCreateTexturePath = "Failed to create texture save path: %s";
+        public String failToCreateModelPath = "Failed to create model save path: %s";
+        public String failToCreateItemModelPath = "Failed to create item model save path: %s";
+        public String unknownRecipeType = "Unknown recipe type: %s";
+        public String failToParseRecipe = "Model %s recipe %d failed to parse: %s";
+
+        public String modelNotEffect = "Model not effective yet.";
+    }
+
     public static FurnitureModelImpl loadModel(File modelFile) throws Exception {
         return loadModel(modelFile, null);
     }
@@ -32,11 +53,11 @@ public class FurnitureModelImpl implements FurnitureModel {
         // 0. validate name & path
         String modelName = modelFile.getName().replace(".zip", "");
         if (!isValidName(modelName)) {
-            throw new Exception("Model name contains invalid characters, must be [a-z0-9._-]: %s".formatted(modelName));
+            throw new Exception(Language.furnitureModelText.modelNameInvalid.formatted(modelName));
         }
         String prefix = prefixPath == null ? "furniture" : prefixPath;
         if (!isValidName(prefix.replace("/", ""))) {
-            throw new Exception("Prefix path contains invalid characters, must be [a-z0-9._-]: %s".formatted(prefix));
+            throw new Exception(Language.furnitureModelText.prefixPathInvalid.formatted(prefix));
         }
         File unzipCache = new File(FurnitureCore.getCacheDir(), "model_" + modelName);
         try {
@@ -50,7 +71,7 @@ public class FurnitureModelImpl implements FurnitureModel {
             // 2. valid the json file exists then parse it to modelJson
             File jsonFile = new File(unzipCache, "model.json");
             if (!jsonFile.exists()) {
-                throw new Exception("Model json file not found.");
+                throw new Exception(Language.furnitureModelText.modelJsonNotFound);
             }
             JSONObject json = JsonUtils.loadFromFile(jsonFile);
             furnitureModel.ambientocclusion = json.containsKey("ambientocclusion") ? json.getBoolean("ambientocclusion") : true;
@@ -59,7 +80,7 @@ public class FurnitureModelImpl implements FurnitureModel {
             furnitureModel.groups = json.getJSONArray("groups");
             furnitureModel.elements = json.getJSONArray("elements");
             if (furnitureModel.elements == null) {
-                throw new Exception("Elements not found in json model file.");
+                throw new Exception(Language.furnitureModelText.elementNotFound);
             }
 
             // 3. load properties.json exists, then parse it to model properties
@@ -81,11 +102,11 @@ public class FurnitureModelImpl implements FurnitureModel {
                 }
                 File textureFile = new File(unzipCache, textureName + ".png");
                 if (!textureFile.exists()) {
-                    throw new Exception("Texture file not found: %s".formatted(textureFile.toString()));
+                    throw new Exception(Language.furnitureModelText.textureNotFound.formatted(textureFile.toString()));
                 }
                 BufferedImage texture = ImageUtils.loadImage(textureFile);
                 if (texture == null) {
-                    throw new Exception("Failed to load texture: %s".formatted(textureFile.toString()));
+                    throw new Exception(Language.furnitureModelText.failToLoadTexture.formatted(textureFile.toString()));
                 }
                 furnitureModel.textures.put(key, texture);
             }
@@ -204,7 +225,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     @Override
     public String getCallableNameNoNamespace() {
         if (!savedAndEffective) {
-            throw new IllegalStateException("Model not effective yet.");
+            throw new IllegalStateException(Language.furnitureModelText.modelNotEffect);
         }
         return prefixPath == null ? modelName : prefixPath + "/" + modelName;
     }
@@ -212,7 +233,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     @Override
     public String getCallableNameWithNamespace() {
         if (!savedAndEffective) {
-            throw new IllegalStateException("Model not effective yet.");
+            throw new IllegalStateException(Language.furnitureModelText.modelNotEffect);
         }
         return namespace + ":" + getCallableNameNoNamespace();
     }
@@ -237,13 +258,13 @@ public class FurnitureModelImpl implements FurnitureModel {
             itemModelPath = new File(itemModelPath, prefixPath);
         }
         if (!textureSavePath.exists() && !textureSavePath.mkdirs()) {
-            throw new Exception("Failed to create texture save path: %s".formatted(textureSavePath.toString()));
+            throw new Exception(Language.furnitureModelText.failToCreateTexturePath.formatted(textureSavePath.toString()));
         }
         if (!modelSavePath.exists() && !modelSavePath.mkdirs()) {
-            throw new Exception("Failed to create model save path: %s".formatted(modelSavePath.toString()));
+            throw new Exception(Language.furnitureModelText.failToCreateModelPath.formatted(modelSavePath.toString()));
         }
         if (!itemModelPath.exists() && !itemModelPath.mkdirs()) {
-            throw new Exception("Failed to create item model save path: %s".formatted(itemModelPath.toString()));
+            throw new Exception(Language.furnitureModelText.failToCreateItemModelPath.formatted(itemModelPath.toString()));
         }
 
         // generate model json
@@ -298,10 +319,10 @@ public class FurnitureModelImpl implements FurnitureModel {
                 } else if (type.equals("shaped")) {
                     internalRecipes.put(pdcKey, getShapedRecipe(i, recipe, pdcKey, this));
                 } else {
-                    throw new Exception("Unknown recipe type: %s".formatted(type));
+                    throw new Exception(Language.furnitureModelText.unknownRecipeType.formatted(type));
                 }
             } catch (Exception e) {
-                XLogger.err("Model %s recipe %d failed to load: %s".formatted(this.getCallableNameWithNamespace(), i, e.getMessage()));
+                XLogger.err(Language.furnitureModelText.failToParseRecipe.formatted(this.getCallableNameWithNamespace(), i, e.getMessage()));
             }
         }
 
@@ -333,24 +354,36 @@ public class FurnitureModelImpl implements FurnitureModel {
         return savedAndEffective;
     }
 
+    public static class ParseRecipeText extends ConfigurationPart {
+        // getShapedRecipe()
+        public String shapeNotFound = "Shape not found in shaped recipe %d";
+        public String shapeInvalid = "Shape should not have more than 3 rows in shaped recipe %d";
+        public String rowNotAvailable = "Row %d not available in shaped recipe %d";
+        public String rowInvalid = "Row %d should not have more than 3 characters in shaped recipe %d";
+        public String ingredientsNotFound = "Ingredients not found in recipe %d";
+        public String keyInvalid = "Key %s should have only 1 character in shaped recipe %d";
+        public String keyNotFound = "Key %s not found in shape in shaped recipe %d";
+        public String ingredientNotAvailable = "Ingredient %s not available in recipe %d";
+    }
+
     private static ShapedRecipe getShapedRecipe(int i, JSONObject recipe, NamespacedKey pdcKey, FurnitureModel furnitureModel) throws Exception {
         ShapedRecipe shapedRecipe = new ShapedRecipe(pdcKey, new FurnitureItemStack(furnitureModel));
         JSONArray shape = recipe.getJSONArray("shape");
         if (shape == null) {
-            throw new Exception("Shape not found in shaped recipe %d".formatted(i));
+            throw new Exception(Language.parseRecipeText.shapeNotFound.formatted(i));
         }
         if (shape.size() > 3) {
-            throw new Exception("Shape should not have more than 3 rows in shaped recipe %d".formatted(i));
+            throw new Exception(Language.parseRecipeText.shapeInvalid.formatted(i));
         }
         String[] shapeList = new String[shape.size()];
         List<Character> keys = new ArrayList<>();
         for (int j = 0; j < shape.size(); j++) {
             String row = shape.getString(j);
             if (row == null) {
-                throw new Exception("Row %d not available in shaped recipe %d".formatted(j, i));
+                throw new Exception(Language.parseRecipeText.rowNotAvailable.formatted(j, i));
             }
             if (row.length() > 3) {
-                throw new Exception("Row %d should not have more than 3 characters in shaped recipe %d".formatted(j, i));
+                throw new Exception(Language.parseRecipeText.rowInvalid.formatted(j, i));
             }
             shapeList[j] = row;
             for (char c : row.toCharArray()) {
@@ -362,18 +395,18 @@ public class FurnitureModelImpl implements FurnitureModel {
         shapedRecipe.shape(shapeList);
         JSONObject ingredients = recipe.getJSONObject("ingredients");
         if (ingredients == null) {
-            throw new Exception("Ingredients not found in shaped recipe %d".formatted(i));
+            throw new Exception(Language.parseRecipeText.ingredientsNotFound.formatted(i));
         }
         for (String key : ingredients.keySet()) {
             if (key.length() != 1) {
-                throw new Exception("Key %s should have 1 character in shaped recipe %d".formatted(key, i));
+                throw new Exception(Language.parseRecipeText.keyInvalid.formatted(key, i));
             }
             if (!keys.contains(key.charAt(0))) {
-                throw new Exception("Key %s not found in shape in shaped recipe %d".formatted(key, i));
+                throw new Exception(Language.parseRecipeText.keyNotFound.formatted(key, i));
             }
             String ingredient = ingredients.getString(key);
             if (ingredient == null) {
-                throw new Exception("Ingredient %s not available in shaped recipe %d".formatted(key, i));
+                throw new Exception(Language.parseRecipeText.ingredientNotAvailable.formatted(key, i));
             }
             if (ingredient.startsWith("minecraft:")) {
                 ingredient = ingredient.split(":")[1];
@@ -387,12 +420,12 @@ public class FurnitureModelImpl implements FurnitureModel {
         ShapelessRecipe shapelessRecipe = new ShapelessRecipe(pdcKey, new FurnitureItemStack(furnitureModel));
         JSONArray ingredients = recipe.getJSONArray("ingredients");
         if (ingredients == null) {
-            throw new Exception("Ingredients not found in recipe %d".formatted(i));
+            throw new Exception(Language.parseRecipeText.ingredientsNotFound.formatted(i));
         }
         for (int j = 0; j < ingredients.size(); j++) {
             String ingredient = ingredients.getString(j);
             if (ingredient == null) {
-                throw new Exception("Ingredient %d not available in recipe %d".formatted(j, i));
+                throw new Exception(Language.parseRecipeText.ingredientNotAvailable.formatted(j, i));
             }
             if (ingredient.startsWith("minecraft:")) {
                 ingredient = ingredient.split(":")[1];

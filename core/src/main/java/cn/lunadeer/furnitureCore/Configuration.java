@@ -12,6 +12,9 @@ public class Configuration extends ConfigurationFile {
     @Comments("The resource pack server for the client to download the resource pack.")
     public static ResourcePackServer resourcePackServer = new ResourcePackServer();
 
+    @Comments("Language of the plugin, see others in the plugins/FurnitureCore/languages folder.")
+    public static String language = "en_us";
+
     public static class ResourcePackServer extends ConfigurationPart {
         @Comments({
                 "Your public ip or domain players use to connect to the server.",

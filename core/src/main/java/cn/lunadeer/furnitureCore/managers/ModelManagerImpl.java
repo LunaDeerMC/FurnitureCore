@@ -1,6 +1,8 @@
 package cn.lunadeer.furnitureCore.managers;
 
 import cn.lunadeer.furnitureCore.FurnitureCore;
+import cn.lunadeer.furnitureCore.Language;
+import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
 import cn.lunadeer.furnitureCoreApi.managers.ModelManager;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import org.bukkit.NamespacedKey;
@@ -15,10 +17,13 @@ import java.util.Map;
  * Manager for models
  */
 public class ModelManagerImpl extends ModelManager {
+
+    public static class ModelManagerText extends ConfigurationPart {
+        public static String modelNotEffect = "Model %s is not effect, cannot be registered.";
+    }
+
     private final FurnitureCore plugin;
-
     private final Map<NamespacedKey, FurnitureModel> modelReady = new HashMap<>();
-
 
     public ModelManagerImpl(FurnitureCore plugin) {
         instance = this;
@@ -51,7 +56,7 @@ public class ModelManagerImpl extends ModelManager {
     @Override
     public void registerModel(@NotNull FurnitureModel model) throws IllegalArgumentException {
         if (!model.isEffect()) {
-            throw new IllegalArgumentException("Model is not effect, cannot be registered.");
+            throw new IllegalArgumentException(Language.modelManagerText.modelNotEffect.formatted(model.getModelName()));
         }
         modelReady.put(model.getItemModelKey(), model);
         model.registerInternalRecipe();
