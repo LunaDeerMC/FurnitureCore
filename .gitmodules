@@ -1,3 +1,6 @@
 [submodule "api"]
 	path = api
 	url = https://github.com/ColdeZhang/FurnitureCoreAPI.git
+[submodule "languages"]
+	path = languages
+	url = https://github.com/FurnitureCore/FurnitureCoreLanguages.git

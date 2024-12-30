@@ -5,7 +5,8 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.List;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * Utility class for loading and saving configuration files.
@@ -65,6 +66,7 @@ public class ConfigurationManager {
     public static void save(Class<? extends ConfigurationFile> clazz, File file) throws Exception {
         createIfNotExist(file);
         YamlConfiguration yaml = new YamlConfiguration();
+        yaml.options().width(200);
         writeConfigurationFile(yaml, clazz, null);
         yaml.save(file);
     }
@@ -113,6 +115,11 @@ public class ConfigurationManager {
     }
 
     private static void readConfigurationFile(YamlConfiguration yaml, Class<? extends ConfigurationFile> clazz, String prefix) throws Exception {
+        PrePostProcessInorder processes = getAndSortPrePostProcess(clazz);
+        // execute methods with @PreProcess annotation
+        for (Method method : processes.preProcessMethods) {
+            method.invoke(null);
+        }
         for (Field field : clazz.getFields()) {
             field.setAccessible(true);
             String key = camelToKebab(field.getName());
@@ -127,6 +134,10 @@ public class ConfigurationManager {
             } else {
                 field.set(null, yaml.get(key));
             }
+        }
+        // execute methods with @PostProcess annotation
+        for (Method method : processes.postProcessMethods) {
+            method.invoke(null);
         }
     }
 
@@ -153,6 +164,39 @@ public class ConfigurationManager {
      */
     private static String camelToKebab(String camel) {
         return camel.replaceAll("([a-z])([A-Z]+)", "$1-$2").toLowerCase();
+    }
+
+    private static class PrePostProcessInorder {
+        public List<Method> preProcessMethods = new ArrayList<>();
+        public List<Method> postProcessMethods = new ArrayList<>();
+    }
+
+    /**
+     * Get methods with @PreProcess and @PostProcess annotations and sort them by priority.
+     * <p>
+     * The methods with higher priority will be executed first.
+     *
+     * @param clazz The configuration file class.
+     * @return A {@link PrePostProcessInorder} object containing the sorted methods.
+     */
+    private static PrePostProcessInorder getAndSortPrePostProcess(Class<? extends ConfigurationFile> clazz) {
+        Map<Method, Integer> preProcessMethodsWithPriority = new HashMap<>();
+        Map<Method, Integer> postProcessMethodsWithPriority = new HashMap<>();
+        for (Method method : clazz.getMethods()) {
+            if (method.isAnnotationPresent(PreProcess.class)) {
+                preProcessMethodsWithPriority.put(method, method.getAnnotation(PreProcess.class).priority());
+            }
+            if (method.isAnnotationPresent(PostProcess.class)) {
+                postProcessMethodsWithPriority.put(method, method.getAnnotation(PostProcess.class).priority());
+            }
+        }
+        PrePostProcessInorder result = new PrePostProcessInorder();
+        // sort methods by priority ascending
+        result.preProcessMethods = new ArrayList<>(preProcessMethodsWithPriority.keySet());
+        result.preProcessMethods.sort(Comparator.comparingInt(preProcessMethodsWithPriority::get));
+        result.postProcessMethods = new ArrayList<>(postProcessMethodsWithPriority.keySet());
+        result.postProcessMethods.sort(Comparator.comparingInt(postProcessMethodsWithPriority::get));
+        return result;
     }
 
 }

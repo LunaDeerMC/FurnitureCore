@@ -13,6 +13,7 @@ import cn.lunadeer.furnitureCoreApi.managers.ResourcePackManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.List;
 
 public final class FurnitureCore extends JavaPlugin {
 
@@ -37,6 +38,13 @@ public final class FurnitureCore extends JavaPlugin {
         }
         // Load language files
         try {
+            final List<String> languages = List.of(
+                    "languages/en_us.yml",
+                    "languages/zh_cn.yml"
+            );
+            for (String language : languages) {
+                this.saveResource(language, true);
+            }
             File languageFile = new File(FurnitureCore.getInstance().getDataFolder(), "languages/" + Configuration.language + ".yml");
             ConfigurationManager.load(Language.class, languageFile, "version");
         } catch (Exception e) {

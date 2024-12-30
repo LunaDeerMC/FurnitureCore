@@ -33,7 +33,7 @@ public class FurnitureModelImpl implements FurnitureModel {
         public String modelJsonNotFound = "Model file model.json not found.";
         public String elementNotFound = "Elements not found in json model file.";
         public String textureNotFound = "Texture file not found: %s";
-        public String failToLoadTexture = "Failed to create texture save path: %s";
+        public String failToLoadTexture = "Failed to load texture file: %s";
 
         // save()
         public String failToCreateTexturePath = "Failed to create texture save path: %s";

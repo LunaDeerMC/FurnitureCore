@@ -28,6 +28,10 @@ dependencies {
 
 tasks.processResources {
     outputs.upToDateWhen { false }
+    // copy languages folder from PROJECT_DIR/languages to core/src/main/resources
+    from(file("${rootProject.projectDir}/languages")) {
+        into("languages")
+    }
     // replace @version@ in plugin.yml with project version
     filesMatching("**/plugin.yml") {
         filter {
