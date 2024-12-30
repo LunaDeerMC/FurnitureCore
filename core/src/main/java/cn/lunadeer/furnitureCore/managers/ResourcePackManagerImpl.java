@@ -374,7 +374,7 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
     private static Map<File, String> listModelFileAndPrefix(File modelDir, File dir) {
         Map<File, String> result = new HashMap<>();
         File[] files = dir.listFiles();
-        XLogger.debug("%s files: %s", dir.getAbsolutePath(), Arrays.toString(files));
+        XLogger.debug("listModelFileAndPrefix: Path %s with files: %s", dir.getAbsolutePath(), Arrays.toString(files));
         if (files == null) {
             return new HashMap<>();
         }

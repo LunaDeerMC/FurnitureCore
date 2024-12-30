@@ -4,3 +4,23 @@ main: cn.lunadeer.furnitureCore.FurnitureCore
 api-version: '1.20'
 folia-supported: true
 load: STARTUP
+permissions:
+  furniturecore.command.give:
+    default: op
+  furniturecore.command.reload:
+    default: op
+  furniturecore.command.apply:
+    default: op
+commands:
+  furniture-give:
+    description: Give furniture to player.
+    usage: /furniture-give <target> <furniture> [amount]
+    permission: furniturecore.command.give
+  furniture-reload:
+    description: Reload FurnitureCore.
+    usage: /furniture-reload <type>
+    permission: furniturecore.command.reload
+  furniture-apply:
+    description: Apply furniture resource pack to player.
+    usage: /furniture-apply <target> [force]
+    permission: furniturecore.command.apply

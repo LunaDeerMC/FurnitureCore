@@ -1,5 +1,8 @@
 package cn.lunadeer.furnitureCore;
 
+import cn.lunadeer.furnitureCore.commands.Apply;
+import cn.lunadeer.furnitureCore.commands.Give;
+import cn.lunadeer.furnitureCore.commands.Reload;
 import cn.lunadeer.furnitureCore.events.*;
 import cn.lunadeer.furnitureCore.managers.ModelManagerImpl;
 import cn.lunadeer.furnitureCore.managers.ResourcePackManagerImpl;
@@ -14,6 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 
 public final class FurnitureCore extends JavaPlugin {
 
@@ -64,6 +68,11 @@ public final class FurnitureCore extends JavaPlugin {
         XLogger.info(" | |  | |_| | |  | | | | | |_| |_| | | |  __/ |___| (_) | | |  __/");
         XLogger.info(" |_|   \\__,_|_|  |_| |_|_|\\__|\\__,_|_|  \\___|\\_____\\___/|_|  \\___|");
         XLogger.info(" ");
+
+        // commands
+        Objects.requireNonNull(getCommand("furniture-give")).setExecutor(new Give());
+        Objects.requireNonNull(getCommand("furniture-apply")).setExecutor(new Apply());
+        Objects.requireNonNull(getCommand("furniture-reload")).setExecutor(new Reload());
 
         // Prepare recipe & event listeners
         getServer().addRecipe(ScrewdriverItemStack.getRecipe());

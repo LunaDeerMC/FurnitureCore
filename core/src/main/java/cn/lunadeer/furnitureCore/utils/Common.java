@@ -1,8 +1,11 @@
 package cn.lunadeer.furnitureCore.utils;
 
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.util.List;
 
 public class Common {
 
@@ -40,6 +43,10 @@ public class Common {
             }
         }
         return folder.delete();
+    }
+
+    public static List<String> getOnlinePlayerNames(JavaPlugin plugin) {
+        return plugin.getServer().getOnlinePlayers().stream().map(Player::getName).toList();
     }
 
 }

@@ -29,6 +29,7 @@ public class ConfigurationManager {
         }
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         readConfigurationFile(yaml, clazz, null);
+        yaml.save(file);
     }
 
     /**
@@ -80,10 +81,10 @@ public class ConfigurationManager {
             }
             // if field is extending ConfigurationPart, recursively write the content
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
-                XLogger.info("%s is a ConfigurationPart.", field.getName());
+                XLogger.debug("%s is a ConfigurationPart.", field.getName());
                 writeConfigurationPart(yaml, (ConfigurationPart) field.get(null), key);
             } else {
-                XLogger.info("Writing %s to %s.", field.getName(), key);
+                XLogger.debug("Writing %s to %s.", field.getName(), key);
                 yaml.set(key, field.get(null));
             }
             if (field.isAnnotationPresent(Comments.class)) {
@@ -131,7 +132,6 @@ public class ConfigurationManager {
                 if (field.isAnnotationPresent(Comments.class)) {
                     yaml.setComments(key, List.of(field.getAnnotation(Comments.class).value()));
                 }
-                yaml.save(new File(yaml.getCurrentPath()));
                 continue;
             }
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
@@ -155,7 +155,6 @@ public class ConfigurationManager {
                 if (field.isAnnotationPresent(Comments.class)) {
                     yaml.setComments(newKey, List.of(field.getAnnotation(Comments.class).value()));
                 }
-                yaml.save(new File(yaml.getCurrentPath()));
                 continue;
             }
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
