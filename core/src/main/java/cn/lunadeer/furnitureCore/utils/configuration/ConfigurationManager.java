@@ -127,6 +127,11 @@ public class ConfigurationManager {
                 key = prefix + "." + key;
             }
             if (!yaml.contains(key)) {
+                yaml.set(key, field.get(null));
+                if (field.isAnnotationPresent(Comments.class)) {
+                    yaml.setComments(key, List.of(field.getAnnotation(Comments.class).value()));
+                }
+                yaml.save(new File(yaml.getCurrentPath()));
                 continue;
             }
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
@@ -146,6 +151,11 @@ public class ConfigurationManager {
             field.setAccessible(true);
             String newKey = key + "." + camelToKebab(field.getName());
             if (!yaml.contains(newKey)) {
+                yaml.set(newKey, field.get(obj));
+                if (field.isAnnotationPresent(Comments.class)) {
+                    yaml.setComments(newKey, List.of(field.getAnnotation(Comments.class).value()));
+                }
+                yaml.save(new File(yaml.getCurrentPath()));
                 continue;
             }
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
