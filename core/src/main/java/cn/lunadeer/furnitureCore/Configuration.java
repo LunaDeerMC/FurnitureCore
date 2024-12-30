@@ -1,8 +1,13 @@
 package cn.lunadeer.furnitureCore;
 
+import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.configuration.Comments;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationFile;
+import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationManager;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
+import org.bukkit.command.CommandSender;
+
+import java.io.File;
 
 public class Configuration extends ConfigurationFile {
 
@@ -48,5 +53,22 @@ public class Configuration extends ConfigurationFile {
 
     @Comments("Debug mode, if report bugs turn this on.")
     public static boolean debug = false;
+
+    /**
+     * Load the configuration file and language file.
+     *
+     * @param sender The command sender.
+     */
+    public static boolean load(CommandSender sender) {
+        try {
+            File configFile = new File(FurnitureCore.getInstance().getDataFolder(), "config.yml");
+            ConfigurationManager.load(Configuration.class, configFile, "version");
+            Language.load(FurnitureCore.getInstance().getServer().getConsoleSender());  // Load language file
+            return true;
+        } catch (Exception e) {
+            Notification.error(sender, Language.furnitureCoreText.failToLoadConfig, e.getMessage());
+            return false;
+        }
+    }
 
 }

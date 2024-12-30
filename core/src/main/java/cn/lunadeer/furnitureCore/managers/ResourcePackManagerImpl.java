@@ -5,6 +5,7 @@ import cn.lunadeer.furnitureCore.FurnitureCore;
 import cn.lunadeer.furnitureCore.Language;
 import cn.lunadeer.furnitureCore.models.FurnitureModelImpl;
 import cn.lunadeer.furnitureCore.utils.JsonUtils;
+import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
@@ -15,6 +16,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.sun.net.httpserver.HttpServer;
 import net.kyori.adventure.text.Component;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.io.File;
@@ -97,7 +99,8 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
     );
 
     @Override
-    public void loadModelsFromDisk() {
+    public void loadModelsFromDisk(CommandSender sender) {
+        modelLoad.clear();
         // 1. list all zip files under models directory
         Map<File, String> modelDirZipFiles = listModelFileAndPrefix(modelDir, modelDir);
 
@@ -110,19 +113,19 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
                 // - add the model to a list for later use
                 modelLoad.add(furnitureModel);
             } catch (Exception e) {
-                XLogger.err(Language.resourcePackManagerText.failToLoadModel, zipFile.getAbsoluteFile().toString());
-                XLogger.err(Language.resourcePackManagerText.reason, e.getMessage());
+                Notification.error(sender, Language.resourcePackManagerText.failToLoadModel, zipFile.getAbsoluteFile().toString());
+                Notification.error(sender, Language.resourcePackManagerText.reason, e.getMessage());
                 failed.add(zipFile.getName());
             }
         }
-        XLogger.info(Language.resourcePackManagerText.loadModelsCount, modelLoad.size());
+        Notification.info(sender, Language.resourcePackManagerText.loadModelsCount, modelLoad.size());
         if (!failed.isEmpty()) {
-            XLogger.err(Language.resourcePackManagerText.listFailedLoadModels, failed.size(), String.join(", ", failed));
+            Notification.error(sender, Language.resourcePackManagerText.listFailedLoadModels, failed.size(), String.join(", ", failed));
         }
     }
 
     @Override
-    public void generateResourcePack() throws Exception {
+    public void generateResourcePack(CommandSender sender) throws Exception {
         resourcePackStatus = ResourcePackStatus.GENERATING;
         // 0. clear all models
         ModelManager.getInstance().unregisterAllModels();
@@ -160,11 +163,11 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
                 ModelManager.getInstance().registerModel(furnitureModel);
                 recipeCount += furnitureModel.getInternalRecipes().size();
             } catch (Exception e) {
-                XLogger.err(Language.resourcePackManagerText.failToGenerateModelFile, furnitureModel.getModelName(), e.getMessage());
+                Notification.error(sender, Language.resourcePackManagerText.failToGenerateModelFile, furnitureModel.getModelName(), e.getMessage());
             }
         }
-        XLogger.info(Language.resourcePackManagerText.registeredRecipesCount, recipeCount);
-        XLogger.info(Language.resourcePackManagerText.resourcePackModelsCount, ModelManager.getInstance().getModels().size());
+        Notification.info(sender, Language.resourcePackManagerText.registeredRecipesCount, recipeCount);
+        Notification.info(sender, Language.resourcePackManagerText.resourcePackModelsCount, ModelManager.getInstance().getModels().size());
 
         // 5. generate atlas files
         File atlasDir = new File(getAssetDir(), "minecraft/atlases");
@@ -201,9 +204,9 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         resourcePackHash = GetFileHash(getResourcePackZip());
 
         // Done output resource pack info
-        XLogger.info(Language.resourcePackManagerText.packGenerateSuccess);
-        XLogger.info(Language.resourcePackManagerText.resourcePackSize, GetResourcePackZipSize());
-        XLogger.info(Language.resourcePackManagerText.resourcePackHash, BytesToHex(resourcePackHash));
+        Notification.info(sender, Language.resourcePackManagerText.packGenerateSuccess);
+        Notification.info(sender, Language.resourcePackManagerText.resourcePackSize, GetResourcePackZipSize());
+        Notification.info(sender, Language.resourcePackManagerText.resourcePackHash, BytesToHex(resourcePackHash));
         resourcePackStatus = ResourcePackStatus.GENERATED;
 
         if (!DeleteFolderRecursively(getResourcePackCacheDir())) {
@@ -251,13 +254,23 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
 
     @Override
     public void applyToAllPlayers() throws IllegalStateException {
+        applyToAllPlayers(false);
+    }
+
+    @Override
+    public void applyToAllPlayers(boolean force) throws IllegalStateException {
         for (Player player : plugin.getServer().getOnlinePlayers()) {
-            applyToPlayer(player);
+            applyToPlayer(player, force);
         }
     }
 
     @Override
     public void applyToPlayer(Player player) throws IllegalStateException {
+        applyToPlayer(player, false);
+    }
+
+    @Override
+    public void applyToPlayer(Player player, boolean force) throws IllegalStateException {
         if (resourcePackStatus != ResourcePackStatus.READY) {
             throw new IllegalStateException(Language.resourcePackManagerText.packNotReady);
         }
@@ -265,7 +278,7 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
         player.setResourcePack(getResourcePackUrl(),
                 resourcePackHash,
                 Component.text(Language.resourcePackManagerText.messageSentToClient),
-                Configuration.resourcePackSettings.required);
+                force);
     }
 
     @Override

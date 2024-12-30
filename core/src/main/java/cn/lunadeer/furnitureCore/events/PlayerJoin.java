@@ -1,5 +1,6 @@
 package cn.lunadeer.furnitureCore.events;
 
+import cn.lunadeer.furnitureCore.Configuration;
 import cn.lunadeer.furnitureCoreApi.managers.ResourcePackManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,6 +12,6 @@ public class PlayerJoin implements Listener {
         if (!ResourcePackManager.getInstance().isReady()) {
             return;
         }
-        ResourcePackManager.getInstance().applyToPlayer(event.getPlayer());
+        ResourcePackManager.getInstance().applyToPlayer(event.getPlayer(), Configuration.resourcePackSettings.required);
     }
 }

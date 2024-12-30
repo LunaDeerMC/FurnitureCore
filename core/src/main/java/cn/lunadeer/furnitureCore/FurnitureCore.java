@@ -9,14 +9,12 @@ import cn.lunadeer.furnitureCore.managers.ResourcePackManagerImpl;
 import cn.lunadeer.furnitureCore.utils.Notification;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.bStatsMetrics;
-import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationManager;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
 import cn.lunadeer.furnitureCoreApi.items.ScrewdriverItemStack;
 import cn.lunadeer.furnitureCoreApi.managers.ResourcePackManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.util.List;
 import java.util.Objects;
 
 public final class FurnitureCore extends JavaPlugin {
@@ -34,26 +32,7 @@ public final class FurnitureCore extends JavaPlugin {
         new Notification(this);
         new XLogger(this);
         // Load configuration file
-        try {
-            File configFile = new File(FurnitureCore.getInstance().getDataFolder(), "config.yml");
-            ConfigurationManager.load(Configuration.class, configFile, "version");
-        } catch (Exception e) {
-            XLogger.err(Language.furnitureCoreText.failToLoadConfig, e.getMessage());
-        }
-        // Load language files
-        try {
-            final List<String> languages = List.of(
-                    "languages/en_us.yml",
-                    "languages/zh_cn.yml"
-            );
-            for (String language : languages) {
-                this.saveResource(language, true);
-            }
-            File languageFile = new File(FurnitureCore.getInstance().getDataFolder(), "languages/" + Configuration.language + ".yml");
-            ConfigurationManager.load(Language.class, languageFile, "version");
-        } catch (Exception e) {
-            XLogger.err(Language.furnitureCoreText.failToLoadLanguage, e.getMessage());
-        }
+        Configuration.load(FurnitureCore.getInstance().getServer().getConsoleSender());
 
         XLogger.setDebug(Configuration.debug);
         XLogger.info(Language.furnitureCoreText.loading);
@@ -89,9 +68,9 @@ public final class FurnitureCore extends JavaPlugin {
 
         try {
             // 1. ModelManage#loadAndIndexModels
-            ResourcePackManager.getInstance().loadModelsFromDisk();
+            ResourcePackManager.getInstance().loadModelsFromDisk(FurnitureCore.getInstance().getServer().getConsoleSender());
             // 2. GenerateResourcePack
-            ResourcePackManager.getInstance().generateResourcePack();
+            ResourcePackManager.getInstance().generateResourcePack(FurnitureCore.getInstance().getServer().getConsoleSender());
             // 3. StartHttpServerToProvideResourcePack
             ResourcePackManager.getInstance().startServer();
 
