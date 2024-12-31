@@ -87,7 +87,7 @@ public class FurnitureModelImpl implements FurnitureModel {
             File propertiesFile = new File(unzipCache, "properties.json");
             if (propertiesFile.exists()) {
                 JSONObject propertiesJson = JsonUtils.loadFromFile(propertiesFile);
-                furnitureModel.customName = propertiesJson.containsKey("custom_name") ? propertiesJson.getString("custom_name") : furnitureModel.modelName;
+                furnitureModel.displayName = propertiesJson.containsKey("display_name") ? propertiesJson.getString("display_name") : furnitureModel.modelName;
                 furnitureModel.canRotate = propertiesJson.containsKey("can_rotate") ? propertiesJson.getBoolean("can_rotate") : true;
                 furnitureModel.canHanging = propertiesJson.containsKey("can_hanging") ? propertiesJson.getBoolean("can_hanging") : false;
                 // todo parse function
@@ -128,7 +128,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     }
 
     private NamespacedKey itemModelKey;
-    private String customName = null;
+    private String displayName = null;
     private String modelName;
     private boolean canRotate = true;
     private boolean canHanging = false;
@@ -151,13 +151,13 @@ public class FurnitureModelImpl implements FurnitureModel {
     }
 
     @Override
-    public void setCustomName(String customName) {
-        this.customName = customName;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
 
     @Override
-    public String getCustomName() {
-        return customName == null ? modelName : customName;
+    public String getDisplayName() {
+        return displayName == null ? modelName : displayName;
     }
 
     @Override

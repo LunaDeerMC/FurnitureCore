@@ -61,7 +61,7 @@ public class Give implements TabExecutor {
             FurnitureItemStack item = new FurnitureItemStack(model, amount);
             for (Player target : targets) {
                 target.getInventory().addItem(item);
-                Notification.info(sender, Language.giveCommandText.giveSuccess.formatted(amount, model.getCustomName(), target.getName()));
+                Notification.info(sender, Language.giveCommandText.giveSuccess.formatted(amount, model.getDisplayName(), target.getName()));
             }
             return true;
         } catch (Exception e) {
