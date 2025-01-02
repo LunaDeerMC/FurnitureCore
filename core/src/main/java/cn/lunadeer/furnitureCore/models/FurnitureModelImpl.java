@@ -91,6 +91,10 @@ public class FurnitureModelImpl implements FurnitureModel {
                 furnitureModel.canRotate = propertiesJson.containsKey("can_rotate") ? propertiesJson.getBoolean("can_rotate") : true;
                 furnitureModel.canHanging = propertiesJson.containsKey("can_hanging") ? propertiesJson.getBoolean("can_hanging") : false;
                 // todo parse function
+
+                if (furnitureModel.displayName.isEmpty()) { // if display name is empty, set it to model name
+                    furnitureModel.displayName = furnitureModel.modelName;
+                }
             }
 
             // 4. valid the texture referenced in json file exists then load it to textures
