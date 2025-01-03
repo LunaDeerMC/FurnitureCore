@@ -34,6 +34,7 @@ public class PlaceFurniture implements Listener {
         }
         event.setCancelled(true);
         Location location = clickedBlock.getRelative(event.getBlockFace()).getLocation();
+        XLogger.debug("Place furniture at %s", location);
         if (location.getBlock().getType().isSolid()) {
             XLogger.debug("Block is solid");
             return;

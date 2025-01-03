@@ -27,7 +27,7 @@ import org.bukkit.util.Vector;
 
 public class ChairHandler implements Listener {
 
-    private static final float HEIGHT_OFFSET = 0.5f;
+    private static final float HEIGHT_OFFSET = -0.5f;
     private static final NamespacedKey isChair = new NamespacedKey("this_is", "chair");
     private static float GET_HEIGHT(Float height) {
         return HEIGHT_OFFSET + height;
@@ -103,7 +103,7 @@ public class ChairHandler implements Listener {
             return;
         }
         vehicle.remove();
-        passenger.teleportAsync(passenger.getLocation().add(0, HEIGHT_OFFSET * -1, 0));
+        passenger.teleportAsync(passenger.getLocation().add(0, HEIGHT_OFFSET * -1 + 1, 0));
     }
 
     @EventHandler
@@ -113,8 +113,7 @@ public class ChairHandler implements Listener {
             return;
         }
         if (vehicle instanceof ArmorStand && vehicle.getPersistentDataContainer().has(isChair, PersistentDataType.BYTE)) {
-            event.setTo(event.getTo().add(0, HEIGHT_OFFSET * -1, 0));
-
+            event.setTo(event.getTo().add(0, HEIGHT_OFFSET * -1 + 1, 0));
         }
     }
 
@@ -131,7 +130,7 @@ public class ChairHandler implements Listener {
         // Let players stand up when leaving the server.
         if (vehicle instanceof ArmorStand && vehicle.getPersistentDataContainer().has(isChair, PersistentDataType.BYTE)) {
             vehicle.remove();
-            event.getPlayer().teleportAsync(event.getPlayer().getLocation().add(0, HEIGHT_OFFSET * -1, 0));
+            event.getPlayer().teleportAsync(event.getPlayer().getLocation().add(0, HEIGHT_OFFSET * -1 + 1, 0));
         }
     }
 

@@ -38,6 +38,8 @@ public class FurnitureBlock {
         this.furnitureItemStack = furnitureItemStack;
         this.location = location;
         this.key = new NamespacedKey("furniture", LocationToHash(location));
+        XLogger.debug("FurnitureBlock key: %s", key);
+        XLogger.debug("FurnitureBlock location: %s", location);
     }
 
     /**
@@ -51,6 +53,8 @@ public class FurnitureBlock {
     public FurnitureBlock(Block block) throws IllegalArgumentException {
         this.location = block.getLocation();
         this.key = new NamespacedKey("furniture", LocationToHash(location));
+        XLogger.debug("FurnitureBlock key: %s", key);
+        XLogger.debug("FurnitureBlock location: %s", location);
         // get item display uid
         String itemDisplayUidStr = location.getWorld().getPersistentDataContainer().get(key, PersistentDataType.STRING);
         if (itemDisplayUidStr == null) {
@@ -179,6 +183,7 @@ public class FurnitureBlock {
             XLogger.debug("FurnitureBrokenEvent cancelled");
             return false;
         }
+        XLogger.debug("Furniture broken at %s", location);
         location.getBlock().setType(Material.AIR);
         location.getBlock().getState().update();
         itemDisplay.remove();

@@ -213,6 +213,7 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
             resourcePackStatus = ResourcePackStatus.ERROR;
             throw new Exception(Language.resourcePackManagerText.failToDeletePackCache);
         }
+        applyToAllPlayers(Configuration.resourcePackSettings.required);
     }
 
     @Override
