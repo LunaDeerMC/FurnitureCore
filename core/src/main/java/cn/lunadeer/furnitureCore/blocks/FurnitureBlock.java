@@ -85,6 +85,10 @@ public class FurnitureBlock {
         return key;
     }
 
+    public ItemDisplay getItemDisplay() {
+        return itemDisplay;
+    }
+
 
     /**
      * The placeholder block type.

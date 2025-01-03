@@ -4,6 +4,7 @@ import cn.lunadeer.furnitureCore.commands.Apply;
 import cn.lunadeer.furnitureCore.commands.Give;
 import cn.lunadeer.furnitureCore.commands.Reload;
 import cn.lunadeer.furnitureCore.events.*;
+import cn.lunadeer.furnitureCore.functionality.ChairHandler;
 import cn.lunadeer.furnitureCore.managers.ModelManagerImpl;
 import cn.lunadeer.furnitureCore.managers.ResourcePackManagerImpl;
 import cn.lunadeer.furnitureCore.utils.Notification;
@@ -60,6 +61,7 @@ public final class FurnitureCore extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new BreakFurniture(), this);
         getServer().getPluginManager().registerEvents(new CraftFurniture(), this);
         getServer().getPluginManager().registerEvents(new RotateFurniture(), this);
+        getServer().getPluginManager().registerEvents(new ChairHandler(), this);
 
         // Prepare managers do model stuff
         getCacheDir().mkdirs();

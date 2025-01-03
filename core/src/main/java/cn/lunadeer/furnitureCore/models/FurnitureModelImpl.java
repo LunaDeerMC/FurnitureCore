@@ -3,11 +3,13 @@ package cn.lunadeer.furnitureCore.models;
 import cn.lunadeer.furnitureCore.Configuration;
 import cn.lunadeer.furnitureCore.FurnitureCore;
 import cn.lunadeer.furnitureCore.Language;
+import cn.lunadeer.furnitureCore.functionality.*;
 import cn.lunadeer.furnitureCore.utils.ImageUtils;
 import cn.lunadeer.furnitureCore.utils.JsonUtils;
 import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.ZipUtils;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
+import cn.lunadeer.furnitureCoreApi.functionality.Functionality;
 import cn.lunadeer.furnitureCoreApi.items.FurnitureItemStack;
 import cn.lunadeer.furnitureCoreApi.models.FurnitureModel;
 import com.alibaba.fastjson.JSONArray;
@@ -90,7 +92,27 @@ public class FurnitureModelImpl implements FurnitureModel {
                 furnitureModel.displayName = propertiesJson.containsKey("display_name") ? propertiesJson.getString("display_name") : furnitureModel.modelName;
                 furnitureModel.canRotate = propertiesJson.containsKey("can_rotate") ? propertiesJson.getBoolean("can_rotate") : true;
                 furnitureModel.canHanging = propertiesJson.containsKey("can_hanging") ? propertiesJson.getBoolean("can_hanging") : false;
-                // todo parse function
+                if (propertiesJson.containsKey("function")) {
+                    JSONObject functionJson = propertiesJson.getJSONObject("function");
+                    String type = functionJson.containsKey("type") ? functionJson.getString("type") : "none";
+                    switch (type) {
+                        case "chair":
+                            furnitureModel.modelFunction = new ChairFunction(functionJson);
+                            break;
+                        case "storage":
+                            furnitureModel.modelFunction = new StorageFunction(functionJson);
+                            break;
+                        case "illumination":
+                            furnitureModel.modelFunction = new IlluminationFunction(functionJson);
+                            break;
+                        case "work_block":
+                            furnitureModel.modelFunction = new WorkBlockFunction(functionJson);
+                            break;
+                        default:
+                            furnitureModel.modelFunction = new NoneFunction();
+                            break;
+                    }
+                }
 
                 if (furnitureModel.displayName.isEmpty()) { // if display name is empty, set it to model name
                     furnitureModel.displayName = furnitureModel.modelName;
@@ -145,6 +167,7 @@ public class FurnitureModelImpl implements FurnitureModel {
     private JSONArray recipesJson = new JSONArray();
     private final Map<NamespacedKey, CraftingRecipe> internalRecipes = new HashMap<>();
     private boolean savedAndEffective = false;
+    private Functionality modelFunction;
 
     @Override
     public NamespacedKey getItemModelKey() {
@@ -209,6 +232,11 @@ public class FurnitureModelImpl implements FurnitureModel {
     @Override
     public Boolean canHanging() {
         return this.canHanging;
+    }
+
+    @Override
+    public Functionality getFunction() {
+        return modelFunction;
     }
 
     /**
