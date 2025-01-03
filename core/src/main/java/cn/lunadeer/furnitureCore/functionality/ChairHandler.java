@@ -27,7 +27,7 @@ import org.bukkit.util.Vector;
 
 public class ChairHandler implements Listener {
 
-    private static final float HEIGHT_OFFSET = -0.5f;
+    private static final float HEIGHT_OFFSET = -0.99f;
     private static final NamespacedKey isChair = new NamespacedKey("this_is", "chair");
     private static float GET_HEIGHT(Float height) {
         return HEIGHT_OFFSET + height;
@@ -135,7 +135,7 @@ public class ChairHandler implements Listener {
     }
 
     private static ArmorStand dropSeat(Location blockLocation, Vector direction, Float height) {
-        clearSeat(blockLocation, height);
+        clearSeat(blockLocation.clone(), height);
         Location location = blockLocation.add(0.5, GET_HEIGHT(height), 0.5);
         location.setDirection(direction);
         ArmorStand armorStand = (ArmorStand) blockLocation.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
@@ -146,6 +146,11 @@ public class ChairHandler implements Listener {
         armorStand.setGravity(false);
         armorStand.setInvulnerable(true);
         armorStand.setSmall(true);
+        armorStand.setNoPhysics(true);
+        armorStand.setCanMove(false);
+        armorStand.setCanTick(false);
+        armorStand.setCanPickupItems(false);
+        armorStand.setCollidable(false);
         XLogger.debug("Chair dropped at " + location.toString());
         return armorStand;
     }
