@@ -71,7 +71,7 @@ public class ChairHandler implements Listener {
         }
 
         // Check for distance between player and chair.
-        if (player.getLocation().distance(block.getLocation().add(0.5, 0, 0.5)) > 2)
+        if (player.getLocation().distance(block.getLocation().add(0.5, 0, 0.5)) > 1.3)
             return;
 
         // Sit-down process.
