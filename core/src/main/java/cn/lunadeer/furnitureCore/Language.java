@@ -8,7 +8,6 @@ import cn.lunadeer.furnitureCore.managers.ModelManagerImpl;
 import cn.lunadeer.furnitureCore.managers.ResourcePackManagerImpl;
 import cn.lunadeer.furnitureCore.models.FurnitureModelImpl;
 import cn.lunadeer.furnitureCore.utils.Notification;
-import cn.lunadeer.furnitureCore.utils.XLogger;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationFile;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationManager;
 import cn.lunadeer.furnitureCore.utils.configuration.ConfigurationPart;
@@ -70,7 +69,6 @@ public class Language extends ConfigurationFile {
                 FurnitureCore.getInstance().saveResource(language, false);
             }
             File languageFile = new File(FurnitureCore.getInstance().getDataFolder(), "languages/" + Configuration.language + ".yml");
-            Notification.info(sender, Language.furnitureCoreText.loading);
             ConfigurationManager.load(Language.class, languageFile);    // This will save the default language file if it doesn't exist.
         } catch (Exception e) {
             Notification.error(sender, Language.furnitureCoreText.failToLoadLanguage, e.getMessage());
