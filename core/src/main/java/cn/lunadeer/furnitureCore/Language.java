@@ -66,6 +66,9 @@ public class Language extends ConfigurationFile {
                     "languages/zh_cn.yml"
             );
             for (String language : languages) {
+                if (new File(FurnitureCore.getInstance().getDataFolder(), language).exists()) {
+                    continue;
+                }
                 FurnitureCore.getInstance().saveResource(language, false);
             }
             File languageFile = new File(FurnitureCore.getInstance().getDataFolder(), "languages/" + Configuration.language + ".yml");
