@@ -1,6 +1,5 @@
 package cn.lunadeer.furnitureCore.utils.configuration;
 
-import cn.lunadeer.furnitureCore.utils.XLogger;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -29,6 +28,7 @@ public class ConfigurationManager {
         }
         YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
         readConfigurationFile(yaml, clazz, null);
+        yaml.options().width(250);
         yaml.save(file);
     }
 
@@ -81,10 +81,8 @@ public class ConfigurationManager {
             }
             // if field is extending ConfigurationPart, recursively write the content
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
-                XLogger.debug("%s is a ConfigurationPart.", field.getName());
                 writeConfigurationPart(yaml, (ConfigurationPart) field.get(null), key);
             } else {
-                XLogger.debug("Writing %s to %s.", field.getName(), key);
                 yaml.set(key, field.get(null));
             }
             if (field.isAnnotationPresent(Comments.class)) {
@@ -127,17 +125,21 @@ public class ConfigurationManager {
             if (prefix != null && !prefix.isEmpty()) {
                 key = prefix + "." + key;
             }
-            if (!yaml.contains(key)) {
-                yaml.set(key, field.get(null));
+            boolean missingKey = !yaml.contains(key);
+            if (missingKey) {
+                yaml.createSection(key);
                 if (field.isAnnotationPresent(Comments.class)) {
                     yaml.setComments(key, List.of(field.getAnnotation(Comments.class).value()));
                 }
-                continue;
             }
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
                 readConfigurationPart(yaml, (ConfigurationPart) field.get(null), key);
             } else {
-                field.set(null, yaml.get(key));
+                if (missingKey) {
+                    yaml.set(key, field.get(null));
+                } else {
+                    field.set(null, yaml.get(key));
+                }
             }
         }
         // execute methods with @PostProcess annotation
@@ -150,17 +152,21 @@ public class ConfigurationManager {
         for (Field field : obj.getClass().getFields()) {
             field.setAccessible(true);
             String newKey = key + "." + camelToKebab(field.getName());
-            if (!yaml.contains(newKey)) {
-                yaml.set(newKey, field.get(obj));
+            boolean missingKey = !yaml.contains(newKey);
+            if (missingKey) {
+                yaml.createSection(newKey);
                 if (field.isAnnotationPresent(Comments.class)) {
                     yaml.setComments(newKey, List.of(field.getAnnotation(Comments.class).value()));
                 }
-                continue;
             }
             if (ConfigurationPart.class.isAssignableFrom(field.getType())) {
                 readConfigurationPart(yaml, (ConfigurationPart) field.get(obj), newKey);
             } else {
-                field.set(obj, yaml.get(newKey));
+                if (missingKey) {
+                    yaml.set(newKey, field.get(obj));
+                } else {
+                    field.set(obj, yaml.get(newKey));
+                }
             }
         }
     }
