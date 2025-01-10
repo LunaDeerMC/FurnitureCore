@@ -125,6 +125,12 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
     }
 
     @Override
+    public void regenerateResourcePack(CommandSender sender) throws Exception {
+        generateResourcePack(sender);
+        resourcePackStatus = ResourcePackStatus.READY;
+        applyToAllPlayers(Configuration.resourcePackSettings.required);
+    }
+
     public void generateResourcePack(CommandSender sender) throws Exception {
         resourcePackStatus = ResourcePackStatus.GENERATING;
         // 0. clear all models
@@ -213,7 +219,6 @@ public class ResourcePackManagerImpl extends ResourcePackManager {
             resourcePackStatus = ResourcePackStatus.ERROR;
             throw new Exception(Language.resourcePackManagerText.failToDeletePackCache);
         }
-        applyToAllPlayers(Configuration.resourcePackSettings.required);
     }
 
     @Override

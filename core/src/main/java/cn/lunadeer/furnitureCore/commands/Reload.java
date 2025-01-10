@@ -75,7 +75,7 @@ public class Reload implements TabExecutor {
         try {
             Notification.info(sender, Language.reloadCommandText.reloadingResource);
             ResourcePackManager.getInstance().loadModelsFromDisk(sender);
-            ResourcePackManager.getInstance().generateResourcePack(sender);
+            ResourcePackManager.getInstance().regenerateResourcePack(sender);
             Notification.info(sender, Language.reloadCommandText.reloadResourceSuccess);
         } catch (Exception e) {
             Notification.error(sender, e.getMessage());

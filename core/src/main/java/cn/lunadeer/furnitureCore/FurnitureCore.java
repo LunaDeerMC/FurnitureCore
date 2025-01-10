@@ -72,7 +72,7 @@ public final class FurnitureCore extends JavaPlugin {
             // 1. ModelManage#loadAndIndexModels
             ResourcePackManager.getInstance().loadModelsFromDisk(FurnitureCore.getInstance().getServer().getConsoleSender());
             // 2. GenerateResourcePack
-            ResourcePackManager.getInstance().generateResourcePack(FurnitureCore.getInstance().getServer().getConsoleSender());
+            ResourcePackManager.getInstance().regenerateResourcePack(FurnitureCore.getInstance().getServer().getConsoleSender());
             // 3. StartHttpServerToProvideResourcePack
             ResourcePackManager.getInstance().startServer();
 
